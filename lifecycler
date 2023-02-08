@@ -1,0 +1,80 @@
+#!/usr/bin/bash
+if [[ $# == 0 ]]; then exit 1; fi
+
+LNAME=keyparser
+LSNAME=lib$LNAME.so
+LPATH=out/bin
+
+PPATH=out/keyparser
+
+function Build {
+    echo "Assembling library ..."
+
+    make DST=$LPATH/ NAME=$LNAME -q
+    if [[ $? == 0 && -e $PPATH.deb ]]; then echo "Current package is actual"; return; fi
+    make DST=$LPATH/ NAME=$LNAME
+
+    echo "Creating package ..."
+
+    PKG_DEB=$PPATH/DEBIAN
+    PKG_LIB=$PPATH/usr/local/lib
+    PKG_INC=$PPATH/usr/local/include/$LNAME
+
+    DEB_MAIN="Maintainer: dyukoffv4 <net998art@gmail.com>"
+    DEB_DESC="Description: Key Parsing DL for C++ applications"
+
+    mkdir -p $PKG_DEB
+    mkdir -p $PKG_LIB
+    mkdir -p $PKG_INC
+
+    cp $LPATH/$LSNAME $PKG_LIB
+    cp src/defines.hpp $PKG_INC
+    cp src/key.hpp $PKG_INC
+    cp src/terminal.hpp $PKG_INC
+
+    DEB_SIZE=$(( $(du -k $PKG_INC | awk '{print $1}') + $(du -k $PKG_LIB/$LSNAME | awk '{print $1}') ))
+
+    DEB_DEPN=""
+    for i in $(objdump -p $LPATH/$LSNAME | awk '/NEEDED/{print $2}')
+    do STRING=$(echo $(dpkg -S $i) | awk '{print $1}'); DEB_DEPN="$DEB_DEPN ${STRING%:*:},"
+    done
+
+    echo "Package: $LNAME"              > $PKG_DEB/control
+    echo "Version: 1.0"                 >> $PKG_DEB/control
+    echo "Section: unknown"             >> $PKG_DEB/control
+    echo "Priority: optional"           >> $PKG_DEB/control
+    echo "Architecture: amd64"          >> $PKG_DEB/control
+    echo "Essential: no"                >> $PKG_DEB/control
+    echo "Depends: $DEB_DEPN"           >> $PKG_DEB/control
+    echo "Installed-Size: $DEB_SIZE"    >> $PKG_DEB/control
+    echo $DEB_MAIN                      >> $PKG_DEB/control
+    echo $DEB_DESC                      >> $PKG_DEB/control
+
+    dpkg-deb --build ./$PPATH
+}
+
+function Install {
+    echo "Installing package ..."
+    if [[ $(dpkg -l | grep $LNAME) ]]; then sudo apt reinstall ./$PPATH.deb
+    else sudo apt install ./$PPATH.deb; fi
+}
+
+function Clean {
+    echo "Clearing binary files ..."
+    rm -rf $LPATH
+    rm -rf $PPATH
+}
+
+function Uninstall {
+    if [[ $(dpkg -l | grep $LNAME) ]]
+    then echo "Uninstalling package ..."; sudo apt remove $LNAME
+    fi
+}
+
+if [[ $1 == "build" && $2 == "-i" ]]; then Build; Install; exit 0; fi
+if [[ $1 == "build" ]]; then Build; exit 0; fi
+if [[ $1 == "clean" && $2 == "-a" ]]; then Clean; rm -f $PPATH.deb; exit 0; fi
+if [[ $1 == "clean" ]]; then Clean; exit 0; fi
+if [[ $1 == "prune" && $2 == "-c" ]]; then Clean; rm -f $PPATH.deb; Uninstall; exit 0; fi
+if [[ $1 == "prune" ]]; then Uninstall; exit 0; fi
+exit 1

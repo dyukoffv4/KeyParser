@@ -1,9 +1,6 @@
 SRC = src/
-DST = bin/
-
 
 all: $(DST)lib$(NAME).so
-	return 0
 
 $(DST)lib$(NAME).so: $(DST)key.o $(DST)terminal.o
 	g++ -shared $(DST)key.o $(DST)terminal.o -o $(DST)lib$(NAME).so
