@@ -3,9 +3,10 @@ if [[ $# == 0 ]]; then exit 1; fi
 
 LNAME=keyparser
 LSNAME=lib$LNAME.so
-LPATH=out/bin
 
-PPATH=out/keyparser
+DPATH=out
+LPATH=$DPATH/bin
+PPATH=$DPATH/keyparser
 
 function Build {
     echo "Assembling library ..."
@@ -73,7 +74,7 @@ function Uninstall {
 
 if [[ $1 == "build" && $2 == "-i" ]]; then Build; Install; exit 0; fi
 if [[ $1 == "build" ]]; then Build; exit 0; fi
-if [[ $1 == "clean" && $2 == "-a" ]]; then Clean; rm -f $PPATH.deb; exit 0; fi
+if [[ $1 == "clean" && $2 == "-a" ]]; rm -rf $DPATH; exit 0; fi
 if [[ $1 == "clean" ]]; then Clean; exit 0; fi
 if [[ $1 == "prune" && $2 == "-c" ]]; then Clean; rm -f $PPATH.deb; Uninstall; exit 0; fi
 if [[ $1 == "prune" ]]; then Uninstall; exit 0; fi
