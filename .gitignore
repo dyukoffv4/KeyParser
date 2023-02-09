@@ -1,3 +1,3 @@
 /out
 *.deb
-*.temp
+*.temp*
