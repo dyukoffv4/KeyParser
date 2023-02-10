@@ -38,7 +38,7 @@ bool KP::Key::operator==(const Key& key) const {
     return s_data == key.s_data && l_data == key.l_data;
 }
 
-KP::Key::zoneState KP::Key::operator[](const int& num) const {
+KP::Key::rangeState KP::Key::operator[](const int& num) const {
     if (lk_num < 0 && hk_num < 0) return ZS_I;
     if (lk_num < 0) return num <= hk_num ? ZS_I : ZS_H;
     if (hk_num < 0) return num >= lk_num ? ZS_I : ZS_L;

@@ -80,7 +80,7 @@ void KP::Terminal::execute(Args input) {
             if (i[0] == '-') tasks[tasks.size() - 1].second.push_back(i.substr(1));
             else {
                 int esize = tasks[tasks.size() - 1].second.size() + 1;
-                if (tasks[tasks.size() - 1].first[esize] == Key::zoneState::ZS_H) tasks.push_back({binds.find(Key::getRoot())->first, Args()});
+                if (tasks[tasks.size() - 1].first[esize] == Key::ZS_H) tasks.push_back({binds.find(Key::getRoot())->first, Args()});
                 tasks[tasks.size() - 1].second.push_back(i);
             }
         }
@@ -119,7 +119,7 @@ void KP::Terminal::execute(Args input) {
         tasks.erase(tasks.begin());
     }
     for (auto &i : tasks) {
-        if (i.first[i.second.size()] == Key::zoneState::ZS_I) {
+        if (i.first[i.second.size()] == Key::ZS_I) {
             try {
                 if (binds[i.first]) binds[i.first](i.second);
             }
