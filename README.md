@@ -28,8 +28,8 @@
 Для сборки `.deb` пакета следует запустить скрипт с командой `build`. Созданный пакет будет находится в директории "out".
 Для удаления бинарных файлов и промежуточных файлов следует запустить скрипт с командой `clean`.
 
-    KeyParser$ bash lifecycler build
-    KeyParser$ bash lifecycler clean
+    KeyParser$ bash controller build
+    KeyParser$ bash controller clean
 
 ### **2.2. Использование и функционал фреймворка**
 Для использования элементов *KeyParser* нужно подключить заголовочный файл `terminal.hpp`:
