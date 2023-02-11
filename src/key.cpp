@@ -59,6 +59,19 @@ std::string KP::Key::fname() const {
     return std::string() + s_data;
 }
 
+KP::Key KP::Key::makeState(State _state) const {
+    if (_state == E) throw std::invalid_argument("# Key.makeState: Can't make empty key!");
+    if (_state == S) {
+        if (getState() == L) throw std::domain_error("# Key.makeState: Can't make short key from long key!");
+        return Key(s_data, lk_num, hk_num);
+    }
+    if (_state == L) {
+        if (getState() == S) throw std::domain_error("# Key.makeState: Can't make long key from short key!");
+        return Key(l_data, lk_num, hk_num);
+    }
+    return *this;
+}
+
 KP::Key KP::Key::getNull(int f_num, int s_num) {
     Key key('N', f_num, s_num);
     key.s_data = '-';

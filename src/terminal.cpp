@@ -17,8 +17,8 @@ KP::Terminal &KP::Terminal::operator=(const Terminal &term) {
 void KP::Terminal::setKey(Key key, void (*lnr)(Args)) {
     delKey(key);
     if (key.getState() == Key::State::A) {
-        binds[Key(key.lname())] = lnr;
-        binds[Key(key.sname())] = lnr;
+        binds[key.makeState(Key::S)] = lnr;
+        binds[key.makeState(Key::L)] = lnr;
     }
     else binds[key] = lnr;
 }

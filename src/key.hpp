@@ -31,6 +31,8 @@ namespace KP {
 		std::string lname() const;
 		std::string fname() const;
 
+		Key makeState(State) const;
+
 		friend class Terminal;
 	};
 }
