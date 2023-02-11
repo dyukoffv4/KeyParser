@@ -37,7 +37,30 @@ public:
     }
 };
 
+void test(Args input) {
+    cout << "  ";
+    for (auto &i : input) cout << i << ' ';
+    cout << "\n";
+}
+
 int main() {
     TestKey::range_test("Key 1:", "  ");
     TestKey::state_test("Key 2:", "  ");
+
+    Terminal terminal(Terminal::RS_S);
+    terminal.setRoot(test);
+    terminal.setKey(Key('a', 0, 2), test);
+    terminal.setKey(Key('b', 0, 0), test);
+    terminal.setKey(Key('c', 2, 4), test);
+    terminal.setKey(Key('d'), test);
+
+    Args input_1 = {"qq", "-a", "1", "2", "-b", "-c", "1", "2", "3", "-d", "1", "2", "3", "4", "5"};
+    Args input_2 = {"qq", "-a", "1", "2", "3", "4", "-b", "1", "2", "-c", "-d", "1", "2", "3", "4"};
+    Args input_3 = {"qq", "-d", "1", "-a", "-b", "1", "-c", "1", "2", "3", "4", "5", "6", "7", "8"};
+    Args input_4 = {"qq", "-d", "1", "2", "3", "-c", "1", "2", "-b", "-a", "1", "2", "3", "4", "5"};
+
+    cout << "Terminal input 1 (a b c d):\n"; terminal.execute(input_1); cout << "\n";
+    cout << "Terminal input 2 (a b c d):\n"; terminal.execute(input_2); cout << "\n";
+    cout << "Terminal input 3 (d a b c):\n"; terminal.execute(input_3); cout << "\n";
+    cout << "Terminal input 4 (d c b a):\n"; terminal.execute(input_4); cout << "\n";
 }

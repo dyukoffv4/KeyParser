@@ -67,7 +67,7 @@ void KP::Terminal::cleanBinds() {
 
 void KP::Terminal::execute(int argc, char* argv[]) {
     Args data;
-	for (int i = 0; i < argc; i++) data.push_back(argv[i]);
+	for (int i = 1; i < argc; i++) data.push_back(argv[i]);
     execute(data);
 }
 
@@ -76,13 +76,11 @@ void KP::Terminal::execute(Args input) {
 
     // Arguments parsing
     for (auto &i : input) {
-        if ((i.size() == 3 && i[1] == '-') || (i.size() >= 3 && i.substr(0, 2) == "--") || i[0] != '-') {
-            if (i[0] == '-') tasks[tasks.size() - 1].second.push_back(i.substr(1));
-            else {
-                int esize = tasks[tasks.size() - 1].second.size() + 1;
-                if (tasks[tasks.size() - 1].first[esize] == Key::ZS_H) tasks.push_back({binds.find(Key::getRoot())->first, Args()});
-                tasks[tasks.size() - 1].second.push_back(i);
-            }
+        if ((i.size() == 3 && i.substr(0, 2) == "--") || (i.size() >= 3 && i.substr(0, 3) == "---") || i[0] != '-') {
+            int esize = tasks.back().second.size() + 1;
+            if (tasks.back().first[esize] == Key::ZS_H) tasks.push_back({binds.find(Key::getNull())->first, Args()});
+            if (i[0] == '-') tasks.back().second.push_back(i.substr(1));
+            else tasks.back().second.push_back(i);
         }
         else {
             if (i.size() == 1) std::cout << "# Terminal.execute: Key expected after \"-\"!\n";
@@ -90,16 +88,16 @@ void KP::Terminal::execute(Args input) {
                 if (i.size() > 1 && i[1] == '-') {
                     if (i.size() == 2) std::cout << "# Terminal.execute: Key expected after \"--\"!\n";
                     else {
-                        auto key = binds.find(Key(i.substr(2)));
-                        if (key != binds.end()) tasks.push_back({key->first, Args()});
+                        auto pair = binds.find(Key(i.substr(2)));
+                        if (pair != binds.end()) tasks.push_back({pair->first, Args()});
                         else std::cout << "# Terminal.execute: Key with name \"" << i.substr(2) << "\" doesn't exist!\n";
                     }
                 }
                 else {
                     if (i.size() > 2) std::cout << "# Terminal.execute: Short key expected after \"-\"!\n";
                     else {
-                        auto key = binds.find(Key(i[1]));
-                        if (key != binds.end()) tasks.push_back({key->first, Args()});
+                        auto pair = binds.find(Key(i[1]));
+                        if (pair != binds.end()) tasks.push_back({pair->first, Args()});
                         else std::cout << "# Terminal.execute: Key with name \"" << i[1] << "\" doesn't exist!\n";
                     }
                 }
@@ -107,20 +105,28 @@ void KP::Terminal::execute(Args input) {
         }
     }
 
-    // Tasks execute
-    for (int i = 1; i < tasks.size(); i++) {
-        if (tasks[i].first == Key::getRoot()) {
-            if (state == RS_S) tasks[0].second.insert(tasks[0].second.end(), tasks[i].second.begin(), tasks[i].second.end());
-            if (state != RS_A) tasks.erase(tasks.begin() + i--);
+    // Root settings
+    for (auto &i : tasks) {
+        if (i.first == Key::getNull()) {
+            if (state == RS_S) tasks.front().second.insert(tasks.front().second.end(), i.second.begin(), i.second.end());
+            if (state == RS_A) i.first = binds.find(Key::getRoot())->first;
         }
     }
     if (state == RS_S) {
-        tasks.push_back(tasks[0]);
+        tasks.push_back(tasks.front());
         tasks.erase(tasks.begin());
     }
+
+    // Tasks execute
+    Key last_key = Key::getNull();
     for (auto &i : tasks) {
-        if (i.first[i.second.size()] == Key::ZS_I) {
+        if (i.first[i.second.size()] != Key::ZS_L) {
             try {
+                if (state == RS_F && i.first == Key::getNull()) std::cout << "# Terminal.execute: Too many parametrs after key " << last_key.fname() << "!\n";
+                if (i.first[i.second.size()] == Key::ZS_H) {
+                    std::cout << "# Terminal.execute: Too many parametrs after root key!\n";
+                    i.second.erase(i.second.begin() + i.first.hk_num, i.second.end());
+                }
                 if (binds[i.first]) binds[i.first](i.second);
             }
             catch (std::invalid_argument e) {
@@ -128,6 +134,7 @@ void KP::Terminal::execute(Args input) {
             }
         }
         else std::cout << "# Terminal.execute: Key " << i.first.fname() << " could minimum take " << i.first.lk_num << " parametrs!\n";
+        last_key = i.first;
     }
     try {
         if (last) last();
