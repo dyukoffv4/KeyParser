@@ -10,7 +10,7 @@ namespace KP {
 		int lk_num;
 		int hk_num;
 
-		static Key getNull(int f_num = 0, int s_num = 0);
+		static Key getNull(int f_num = -1, int s_num = -1);
 		static Key getRoot(int f_num = -1, int s_num = -1);
 
 	public:
@@ -30,6 +30,8 @@ namespace KP {
 		char sname() const;
 		std::string lname() const;
 		std::string fname() const;
+
+		Key makeState(State) const;
 
 		friend class Terminal;
 	};
