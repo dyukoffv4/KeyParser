@@ -50,8 +50,7 @@ function Build {
 
 function Clean {
     echo "Clearing binary files ..."
-    rm -rf $LPATH
-    rm -rf $PPATH
+    rm -rf out
 }
 
 if [[ $1 == "build" ]]; then Build; fi
