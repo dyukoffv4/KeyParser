@@ -1,6 +1,6 @@
-#include "../../src/terminal.hpp"
+#include "../../src/parser.hpp"
 
-using namespace KP;
+using namespace keyparser;
 using namespace std;
 
 class TestKey {
@@ -8,52 +8,38 @@ public:
     static void range_test(string name, string offset) {
         cout << name << "\n";
         Key key('c', "c");
-        cout << offset << "1: " << (key[0] == Key::ZS_I && key[3] == Key::ZS_I && key[5] == Key::ZS_I) << "\n";
+        cout << offset << "1: " << (key[0] == Key::IN && key[3] == Key::IN && key[5] == Key::IN) << "\n";
         key = Key('c', "c", 3, 3);
-        cout << offset << "2: " << (key[0] == Key::ZS_L && key[3] == Key::ZS_I && key[5] == Key::ZS_H) << "\n";
+        cout << offset << "2: " << (key[0] == Key::LW && key[3] == Key::IN && key[5] == Key::HG) << "\n";
         key = Key('c', "c", 3);
-        cout << offset << "3: " << (key[0] == Key::ZS_L && key[3] == Key::ZS_I && key[5] == Key::ZS_I) << "\n";
+        cout << offset << "3: " << (key[0] == Key::LW && key[3] == Key::IN && key[5] == Key::IN) << "\n";
         key = Key('c', "c", -1, 3);
-        cout << offset << "4: " << (key[0] == Key::ZS_I && key[3] == Key::ZS_I && key[5] == Key::ZS_H) << "\n";
+        cout << offset << "4: " << (key[0] == Key::IN && key[3] == Key::IN && key[5] == Key::HG) << "\n";
         key = Key('c', "c", 3, 5);
-        cout << offset << "5: " << (key[0] == Key::ZS_L && key[3] == Key::ZS_I && key[5] == Key::ZS_I && key[7] == Key::ZS_H) << "\n\n";
-    }
-
-    static void state_test(string name, string offset) {
-        cout << name << "\n";
-        Key key('c');
-        cout << offset << "1: " << (key.getState() == Key::S) << "\n";
-        key = Key('c', "c");
-        cout << offset << "2: " << (key.getState() == Key::A) << "\n";
-        key = Key("c");
-        cout << offset << "3: " << (key.getState() == Key::L) << "\n";
-        try {
-            key = Key("");
-            cout << offset << "4: " << false << "\n\n";
-        }
-        catch (exception exp) {
-            cout << offset << "4: " << true << "\n\n";
-        }
+        cout << offset << "5: " << (key[0] == Key::LW && key[3] == Key::IN && key[5] == Key::IN && key[7] == Key::HG) << "\n\n";
     }
 };
 
-void test(Args input) {
-    cout << "  ";
-    for (auto &i : input) cout << i << ' ';
-    cout << "\n";
+std::ostream& operator<<(std::ostream& out, const keyparser::Args& data) {
+    if (data.size() == 0) return out;
+    for (auto i = data.begin(); i != --data.end(); i++) out << *i << ", ";
+    out << *(--data.end());
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const keyparser::Tasks& data) {
+    for (auto& i : data) out << i.first.fname() << "\t:  " << i.second << '\n';
+    return out;
 }
 
 int main() {
-    TestKey::range_test("Key 1:", "  ");
-    TestKey::state_test("Key 2:", "  ");
+    // TestKey::range_test("Key 1:", "  ");
 
-    Terminal terminal(Terminal::RS_S);
-    terminal.setRootRange(3, 3);
-    terminal.setRoot(test);
-    terminal.setKey(Key('a', "a", 0, 2), test);
-    terminal.setKey(Key('b', "b", 0, 0), test);
-    terminal.setKey(Key('c', "c", 2, 4), test);
-    terminal.setKey(Key('d', "d"), test);
+    Parser terminal;
+    terminal.addKey('a', "a", 0, 2);
+    terminal.addKey('b', "b", 0, 0);
+    terminal.addKey('c', "c", 2, 4);
+    terminal.addKey('d', "d");
 
     Args input_1 = {"qq", "-a", "1", "2", "-b", "-c", "1", "2", "3", "-d", "1", "2", "3", "4", "5"};
     Args input_2 = {"qq", "-a", "1", "2", "3", "4", "-b", "1", "2", "-c", "-d", "1", "2", "3", "4"};
@@ -61,9 +47,10 @@ int main() {
     Args input_4 = {"qq", "-d", "1", "2", "3", "-c", "1", "2", "-b", "-a", "1", "2", "3", "4", "5"};
     Args input_5 = {"qq", "w", "-a", "1", "-b", "-c", "1", "2", "3", "4", "5", "-d", "1", "2", "3"};
 
-    cout << "Terminal input 1 (a b c d):\n"; terminal.execute(input_1); cout << "\n";
-    cout << "Terminal input 2 (a b c d):\n"; terminal.execute(input_2); cout << "\n";
-    cout << "Terminal input 3 (d a b c):\n"; terminal.execute(input_3); cout << "\n";
-    cout << "Terminal input 4 (d c b a):\n"; terminal.execute(input_4); cout << "\n";
-    cout << "Terminal input 5 (a b c d):\n"; terminal.execute(input_5); cout << "\n";
+    cout << "a: 0-2,  b: 0,  c: 2-4,  d: all\n";
+    cout << "Terminal input 1: " << input_1 << "\n" << terminal.parse(input_1) << "\n";
+    cout << "Terminal input 2: " << input_2 << "\n" << terminal.parse(input_2) << "\n";
+    cout << "Terminal input 3: " << input_3 << "\n" << terminal.parse(input_3) << "\n";
+    cout << "Terminal input 4: " << input_4 << "\n" << terminal.parse(input_4) << "\n";
+    cout << "Terminal input 5: " << input_5 << "\n" << terminal.parse(input_5) << "\n";
 }
