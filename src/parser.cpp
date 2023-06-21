@@ -1,7 +1,7 @@
 #include "parser.hpp"
 
 keyparser::Parser::Parser() {
-    keys.push_back(Key::getRoot());
+    keys.push_back({Key::getRoot(), nullptr});
 }
 
 keyparser::Parser &keyparser::Parser::operator=(const Parser &parser) {
@@ -10,26 +10,16 @@ keyparser::Parser &keyparser::Parser::operator=(const Parser &parser) {
     return *this;
 }
 
-void keyparser::Parser::addKey(const char& s_data, int f_num, int s_num) {
-    delKey(s_data);
-    keys.push_back(Key(s_data, f_num, s_num));
-}
-
-void keyparser::Parser::addKey(const std::string& l_data, int f_num, int s_num) {
-    delKey(l_data);
-    keys.push_back(Key(l_data, f_num, s_num));
-}
-
-void keyparser::Parser::addKey(const char& s_data, const std::string& l_data, int f_num, int s_num) {
-    delKey(s_data);
-    delKey(l_data);
-    keys.push_back(Key(s_data, l_data, f_num, s_num));
+template<class T>
+void keyparser::Parser::addKey(const T& data, Parser* parser) {
+    delKey(data);
+    keys.push_back({Key(data), parser});
 }
 
 template<class T>
 void keyparser::Parser::delKey(const T& data) {
     for (auto i = keys.begin(); i != keys.end(); i++) {
-        if (*i == Key(data)) {
+        if (i->first == Key(data)) {
             keys.erase(i);
             break;
         }
@@ -37,13 +27,27 @@ void keyparser::Parser::delKey(const T& data) {
 }
 
 template<class T>
-keyparser::Key keyparser::Parser::getKey(const T& data) {
-    for (auto& i : keys) if (i == Key(data)) return i;
+std::pair<keyparser::Key, keyparser::Parser*>& keyparser::Parser::getKey(const T& data) {
+    for (auto& i : keys) if (i.first == Key(data)) return i;
     throw std::invalid_argument("# Parser.getKey: Key \"" + Key(data).fname() + "\" doesn't exist!");
 }
 
-void keyparser::Parser::setupRoot(int f_num, int s_num) {
-    keys.front() = Key::getRoot(f_num, s_num);
+void keyparser::Parser::setupKeyParser(const Key& key, Parser* parser) {
+    for (auto& i : keys) {
+        if (i.first == key) {
+            i.second = parser;
+            break;
+        }
+    }
+}
+
+void keyparser::Parser::setupKeyArgnum(const Key& key, int f_num, int s_num = -1) {
+    for (auto& i : keys) {
+        if (i.first == key) {
+            i.first.setRange(f_num, s_num);
+            break;
+        }
+    }
 }
 
 keyparser::Tasks keyparser::Parser::parse(int argc, char* argv[]) {
@@ -53,48 +57,58 @@ keyparser::Tasks keyparser::Parser::parse(int argc, char* argv[]) {
 }
 
 keyparser::Tasks keyparser::Parser::parse(Args input) {
-    auto checkArgument = [](std::string arg) -> int {    // 0 - not key;  1 - nl key;  2 - short key;  3 - long key;  4 - error;
-        if (arg.empty()) {
-            std::cout << "# Parser.parser: Empty argument were got!\n";
-            return 4;
-        }
-        if (arg[0] == '-') {
-            if (arg.size() == 2) {
-                if (arg[1] != '-') return 2;
-                std::cout << "# Parser.parser: Key expected after \"--\"!\n";
-                return 4;
-            }
-            if (arg.size() > 2) {
-                if (arg[1] == '-') return (arg[2] == '-') ? 1 : 3;
-                std::cout << "# Parser.parser: Short key expected after \"-\"!\n";
-                return 4;
-            }
-            std::cout << "# Parser.parser: Key expected after \"-\"!\n";
-            return 4;
-        }
-        return 0;
-    };
-
-    Tasks tasks = {{keys.front(), Args()}};
+    Tasks tasks(keys.front().first);
 
     for (auto &i : input) {
-        int arg_type = checkArgument(i);
-
-        if (arg_type < 2) {
-            if (tasks.back().first[tasks.back().second.size() + 1] == Key::HG) tasks.push_back({keys.front(), Args()});
-            if (arg_type == 0) tasks.back().second.push_back(i);
-            else tasks.back().second.push_back(i.substr(1));
-        }
-
-        else if (arg_type < 4) {
-            if (tasks.back().first[tasks.back().second.size()] == Key::LW) {
-                std::cout << "# Parser.parser: Invalid number of arguments for key \"" << tasks.back().first.fname() << "\"!\n";
-                tasks.erase(--tasks.end());
+        try {
+            int ca = checkArgument(i);
+            if (ca == argType::ARG) {
+                if (!tasks.pushArg(i)) break;               // Log about end of root range!
+                continue;
             }
-            if (arg_type == 2) tasks.push_back({getKey(i[1]), Args()});
-            else tasks.push_back({getKey(i.substr(2)), Args()});
+            if (ca == argType::AKEY) {
+                if (!tasks.pushArg(i.substr(1))) break;     // Log about end of root range!
+                continue;
+            }
+            if (ca == argType::SKEY) {
+                // check previous task if it hasn't self parser and hasn't enough arguments
+                tasks.pushKey(getKey(i[1]).first);
+                continue;
+            }
+            if (ca == argType::LKEY) {
+                // check previous task if it hasn't self parser and hasn't enough arguments
+                tasks.pushKey(getKey(i.substr(2)).first);
+                continue;
+            }
         }
+        catch (std::invalid_argument e) {
+            std::cout << e.what() << '\n';
+        }
+    }
+
+    for (auto &i : tasks.data) {
+        // parse all level of keys // back-tracking
     }
 
     return tasks;
 }
+
+
+// for (auto &i : input) {
+//     int arg_type = checkArgument(i);
+
+//     if (arg_type < 2) {
+//         if (tasks.back().first[tasks.back().second.size() + 1] == Key::HG) tasks.push_back({keys.front(), Args()});
+//         if (arg_type == 0) tasks.back().second.push_back(i);
+//         else tasks.back().second.push_back(i.substr(1));
+//     }
+
+//     else if (arg_type < 4) {
+//         if (tasks.back().first[tasks.back().second.size()] == Key::LW) {
+//             std::cout << "# Parser.parser: Invalid number of arguments for key \"" << tasks.back().first.fname() << "\"!\n";
+//             tasks.erase(--tasks.end());
+//         }
+//         if (arg_type == 2) tasks.push_back({getKey(i[1]), Args()});
+//         else tasks.push_back({getKey(i.substr(2)), Args()});
+//     }
+// }

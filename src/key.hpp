@@ -19,6 +19,8 @@ namespace keyparser {
 		explicit Key(const std::string& l_data, int f_num = -1, int s_num = -1);
 		explicit Key(const char& s_data, const std::string& l_data, int f_num = -1, int s_num = -1);
 
+		void setRange(int f_num, int s_num = -1);
+
 		bool operator==(const Key& key) const;
 		rangeState operator[](const int& num) const;
 
