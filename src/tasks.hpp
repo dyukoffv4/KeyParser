@@ -5,20 +5,20 @@
 namespace keyparser {
 	class Tasks {
 	private:
-		std::pair<Key*, Args*> push;
+		Args* push;
 
 	public:
-		std::vector<std::pair<Key, Tasks>> data;
-		Args r_args;
-		Key r_key;
+		std::vector<std::pair<Key, Tasks>> keys;
+		Args root;
 
-		Tasks(const Key& key);
+		Tasks();
 
-        bool pushKey(const Key& key);
+        void pushKey(const Key& key);
 		bool popKey();
-		bool pushArg(const std::string& arg);
+
+		void pushArg(const std::string& arg);
+		bool popArg();
 
 		Tasks& getKeyTasks(const Key& key);
-		Tasks& getLastTasks();
 	};
 }
