@@ -1,29 +1,38 @@
 #pragma once
 
 #include <iostream>
-#include "key.hpp"
+#include <map>
+#include "tasks.hpp"
 
 namespace keyparser {
 	class Parser {
 	private:
-		std::vector<Key> keys;
+		std::map<Key, Parser*> parsers;
+		std::map<Key, std::pair<int, int>> ranges;
+		std::map<Key, Key> fullkeys;
+
+    	enum argType{ARG, AKEY, SKEY, LKEY};
+		int static checkArgument(const std::string& arg);
+
+		enum zoneType{LW, IN, HG};
+		int static checkZoneStat(unsigned number, std::pair<int, int> zone);
 
 	public:
-		Parser();
+		Parser(int f_num = -1, int s_num = -1);
 
 		Parser& operator=(const Parser& parser);
 
-		void addKey(const char& s_data, int f_num = -1, int s_num = -1);
-		void addKey(const std::string& l_data, int f_num = -1, int s_num = -1);
-		void addKey(const char& s_data, const std::string& l_data, int f_num = -1, int s_num = -1);
-		
-		template<class T>
-		void delKey(const T& data);
+		void addKey(const Key& data, int f_num, int s_num, Parser* parser = nullptr);
+		void addKey(const Key& data, int f_num, Parser* parser = nullptr);
+		void addKey(const Key& data, Parser* parser = nullptr);
+		void delKey(const Key& data);
 
-		template<class T>
-		Key getKey(const T& data);
+		void setKeyParser(const Key& key, Parser* parser);
+		void setKeyArgnum(const Key& key, int f_num, int s_num);
+		void setKeyArgnum(const Key& key, int f_num);
 
-		void setupRoot(int f_num, int s_num);
+		void setArgnum(int f_num, int s_num);
+		void setArgnum(int f_num);
 		
 		Tasks parse(int argc, char* argv[]);
 		Tasks parse(Args input);
