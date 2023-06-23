@@ -5,6 +5,7 @@ keyparser::Tasks::Tasks() {
 }
 
 void keyparser::Tasks::pushKey(const Key& key) {
+    if (!push) return;
     if (key == Key::getRoot()) push = &root;
     else {
         keys.push_back({key, Tasks()});
@@ -13,6 +14,7 @@ void keyparser::Tasks::pushKey(const Key& key) {
 }
 
 bool keyparser::Tasks::popKey() {
+    if (!push) return true;
     if (keys.empty()) return false;
     keys.pop_back();
     push = &root;
@@ -20,16 +22,17 @@ bool keyparser::Tasks::popKey() {
 }
 
 void keyparser::Tasks::pushArg(const std::string& arg) {
+    if (!push) return;
     push->push_back(arg);
 }
 
 bool keyparser::Tasks::popArg() {
+    if (!push) return true;
     if (push->empty()) return false;
     push->pop_back();
     return true;
 }
 
-keyparser::Tasks& keyparser::Tasks::getKeyTasks(const Key& key) {
-    for (auto &i : keys) if (i.first == key) return i.second;
-    throw std::invalid_argument("# Tasks.getKeyTasks: Key \"" + key.fname() + "\" doesn't exist!");
+void keyparser::Tasks::lock() {
+    push = nullptr;
 }

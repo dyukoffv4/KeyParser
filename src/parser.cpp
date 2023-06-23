@@ -6,6 +6,8 @@ keyparser::Parser::Parser(int f_num, int s_num) {
     ranges[Key::getRoot()] = {f_num, s_num};
 }
 
+keyparser::Parser::Parser(int f_num) : Parser(f_num, f_num) {}
+
 keyparser::Parser &keyparser::Parser::operator=(const Parser &parser) {
     parsers.clear();
     ranges.clear();

@@ -11,8 +11,6 @@ namespace keyparser {
 		static Key getRoot();
 
 	public:
-		enum rangeState{LW, IN, HG};
-
 		explicit Key(const char& s_data);
 		explicit Key(const std::string& l_data);
 		explicit Key(const char& s_data, const std::string& l_data);

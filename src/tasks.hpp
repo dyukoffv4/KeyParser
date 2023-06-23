@@ -19,6 +19,6 @@ namespace keyparser {
 		void pushArg(const std::string& arg);
 		bool popArg();
 
-		Tasks& getKeyTasks(const Key& key);
+		void lock();
 	};
 }

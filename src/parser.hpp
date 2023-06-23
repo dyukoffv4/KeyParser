@@ -18,7 +18,8 @@ namespace keyparser {
 		int static checkZoneStat(unsigned number, std::pair<int, int> zone);
 
 	public:
-		Parser(int f_num = -1, int s_num = -1);
+		Parser(int f_num, int s_num);
+		Parser(int f_num = -1);
 
 		Parser& operator=(const Parser& parser);
 
