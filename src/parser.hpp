@@ -31,7 +31,8 @@ namespace keyparser {
 		void setKeyArgnum(const Key& key, int f_num, int s_num);
 		void setKeyArgnum(const Key& key, int f_num);
 
-		void setArgnum(int f_num, int s_num = -1);
+		void setArgnum(int f_num, int s_num);
+		void setArgnum(int f_num);
 		
 		Tasks parse(int argc, char* argv[]);
 		Tasks parse(Args input);

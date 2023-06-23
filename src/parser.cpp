@@ -93,6 +93,15 @@ void keyparser::Parser::setKeyArgnum(const Key& key, int f_num) {
     setKeyArgnum(key, f_num, f_num);
 }
 
+void keyparser::Parser::setArgnum(int f_num, int s_num) {
+    if (f_num > s_num && s_num > -1) throw std::invalid_argument("# Parser.setKeyArgnum: First num can't be bigger then second!");
+    ranges[Key::getRoot()] = {f_num, s_num};
+}
+
+void keyparser::Parser::setArgnum(int f_num) {
+    ranges[Key::getRoot()] = {f_num, f_num};
+}
+
 keyparser::Tasks keyparser::Parser::parse(int argc, char* argv[]) {
     Args data;
 	for (int i = 1; i < argc; i++) data.push_back(argv[i]);
