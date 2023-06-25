@@ -66,13 +66,13 @@ void keyparser::Parser::setKeyParser(const Key& key, Parser* parser) {
             parsers[Key(key.sname())] = parser;
             parsers[Key(key.lname())] = parser;
         }
-        else std::cout << "# Parser.parser: Key \"" << key.fname() << "\" doesh't exist!\n\n";
+        else std::cout << "# Parser.parser: Key \"" << key.fname() << "\" doesh't exist!\n";
     }
     else if (parsers.count(key)) {
         parsers[key] = parser;
         if (fullkeys.count(key)) parsers[fullkeys.at(key)] = parser;
     }
-    else std::cout << "# Parser.parser: Key \"" << key.fname() << "\" doesh't exist!\n\n";
+    else std::cout << "# Parser.parser: Key \"" << key.fname() << "\" doesh't exist!\n";
 }
 
 void keyparser::Parser::setKeyArgnum(const Key& key, int f_num, int s_num) {
@@ -82,13 +82,13 @@ void keyparser::Parser::setKeyArgnum(const Key& key, int f_num, int s_num) {
             ranges[Key(key.sname())] = {f_num, s_num};
             ranges[Key(key.lname())] = {f_num, s_num};
         }
-        else std::cout << "# Parser.parser: Key \"" << key.fname() << "\" doesh't exist!\n\n";
+        else std::cout << "# Parser.parser: Key \"" << key.fname() << "\" doesh't exist!\n";
     }
     else if (ranges.count(key)) {
         ranges[key] = {f_num, s_num};
         if (fullkeys.count(key)) ranges[fullkeys.at(key)] = {f_num, s_num};
     }
-    else std::cout << "# Parser.parser: Key \"" << key.fname() << "\" doesh't exist!\n\n";
+    else std::cout << "# Parser.parser: Key \"" << key.fname() << "\" doesh't exist!\n";
 }
 
 void keyparser::Parser::setKeyArgnum(const Key& key, int f_num) {
@@ -121,7 +121,7 @@ keyparser::Tasks keyparser::Parser::parse(Args input) {
             if (ca < 2) {
                 if (checkZoneStat(curr_argnum + 1, ranges[curr_key]) == zoneType::HG) {
                     if (curr_key == Key::getRoot() || checkZoneStat(tasks.root.size() + 1, ranges[Key::getRoot()]) == zoneType::HG) {
-                        std::cout << "# Parser.parser: Too much arguments for key \"" << curr_key.fname() << "\"!\n\n";
+                        std::cout << "# Parser.parser: Too much arguments for key \"" << curr_key.fname() << "\"!\n";
                         break;
                     }
                     tasks.pushKey(Key::getRoot());
@@ -135,19 +135,19 @@ keyparser::Tasks keyparser::Parser::parse(Args input) {
             if (ca < 4) {
                 if (parsers.count(ca == argType::SKEY ? Key(i[1]) : Key(i.substr(2)))) {
                     if (!parsers[curr_key] && checkZoneStat(curr_argnum, ranges[curr_key]) == zoneType::LW) {
-                        std::cout << "# Parser.parser: Invalid number of arguments for key \"" << curr_key.fname() << "\"!\n\n";
+                        std::cout << "# Parser.parser: Key \"" << curr_key.fname() << "\" could minimum take " << ranges[curr_key].first << " parametrs!\n";
                         if (!tasks.popKey()) return Tasks();
                     }
                     curr_key = ca == argType::SKEY ? Key(i[1]) : Key(i.substr(2));
                     tasks.pushKey(curr_key);
                     curr_argnum = 0;
                 }
-                else std::cout << "# Parser.parser: Key \"" << (ca == argType::SKEY ? Key(i[1]) : Key(i.substr(2))).fname() << "\" doesh't exist!\n\n";
+                else std::cout << "# Parser.parser: Key \"" << (ca == argType::SKEY ? Key(i[1]) : Key(i.substr(2))).fname() << "\" doesh't exist!\n";
                 continue;
             }
         }
         catch (std::invalid_argument e) {
-            std::cout << "# Parser.parser:\n" << e.what() << "\n\n";
+            std::cout << "# Parser.parser->\n" << e.what() << "\n";
         }
     }
 
