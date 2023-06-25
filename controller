@@ -11,7 +11,7 @@ function Build {
 
 function Clean {
     echo "Clearing binary files ..."
-    cd ,/cmake || exit
+    cd cmake/ || return 1
     rm -rf !(CMakeLists.txt)
     cd ..
 }
