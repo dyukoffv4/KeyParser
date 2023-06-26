@@ -1,0 +1,18 @@
+name: C/C++ CI for Light
+
+on:
+  push:
+    branches: [ "main-light" ]
+  pull_request:
+    branches: [ "main-light" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: CMake
+      run: bash controller tests --build
+    - name: Run test
+      run: bash controller tests --run
