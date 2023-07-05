@@ -7,7 +7,7 @@ set(HeaderFile ../src/defines.hpp ../src/key.hpp ../src/tasks.hpp ../src/parser.
 set(SharedDest /usr/local/lib)
 set(HeaderDest /usr/local/include/${Library})
 
-message("[${SourceFile}]")
+set(RUNTIME_OUTPUT_DIRECTORY WARNING/)
 
 add_library(${Library} SHARED ${SourceFile})
 
