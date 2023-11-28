@@ -1,4 +1,4 @@
-#include <lkeyparser/parser.hpp>
+#include "../../src/parser.hpp"
 
 using namespace keyparser;
 using namespace std;

@@ -1,11 +1,8 @@
 .vscode
 .idea
 
-/cmake/*
-!/cmake/CMakeLists.txt
-
-/test/cmake/*
-!/test/cmake/CMakeLists.txt
+/out
+/test/out
 
 *.deb
 *.temp
