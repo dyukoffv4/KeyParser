@@ -4,31 +4,31 @@ keyparser::Tasks::Tasks() {
     push = &root;
 }
 
-void keyparser::Tasks::pushKey(const Key& key) {
-    if (!push) return;
+bool keyparser::Tasks::pushKey(const Key& key) {
+    if (!push) return false;
     if (key == Key::getRoot()) push = &root;
     else {
         keys.push_back({key, Tasks()});
         push = &keys.back().second.root;
     }
+    return true;
 }
 
 bool keyparser::Tasks::popKey() {
-    if (!push) return true;
-    if (keys.empty()) return false;
+    if (!push || keys.empty()) return false;
     keys.pop_back();
     push = &root;
     return true;
 }
 
-void keyparser::Tasks::pushArg(const std::string& arg) {
-    if (!push) return;
+bool keyparser::Tasks::pushArg(const std::string& arg) {
+    if (!push) return false;
     push->push_back(arg);
+    return true;
 }
 
 bool keyparser::Tasks::popArg() {
-    if (!push) return true;
-    if (push->empty()) return false;
+    if (!push || push->empty()) return false;
     push->pop_back();
     return true;
 }

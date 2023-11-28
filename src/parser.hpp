@@ -10,8 +10,8 @@ namespace keyparser {
 		std::map<Key, Parser*> parsers;
 		std::map<Key, std::pair<int, int>> ranges;
 		std::map<Key, Key> fullkeys;
-
-    	enum argType{ARG, AKEY, SKEY, LKEY};
+		
+		enum argType{ARG, AKEY, SKEY, LKEY};
 		int static checkArgument(const std::string& arg);
 
 		enum zoneType{LW, IN, HG};

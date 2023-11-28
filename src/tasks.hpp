@@ -13,10 +13,10 @@ namespace keyparser {
 
 		Tasks();
 
-        void pushKey(const Key& key);
+        bool pushKey(const Key& key);
 		bool popKey();
 
-		void pushArg(const std::string& arg);
+		bool pushArg(const std::string& arg);
 		bool popArg();
 
 		void lock();
