@@ -18,39 +18,48 @@ std::ostream& operator<<(std::ostream& out, const keyparser::Tasks& data) {
 
 class TestKey {
 public:
-    static void parser_test_template(string name, string offset, std::vector<Args> inputs) {
+    static void parser_test_1(string name, string offset) {
+        std::vector<Args> input = {
+            {"qq", "-a", "1", "2", "-b", "-c", "1", "2", "3", "-d", "1", "2", "3", "4", "5"},
+            {"qq", "-a", "1", "2", "3", "4", "-b", "1", "2", "-c", "-d", "1", "2", "3", "4"},
+            {"qq", "-d", "1", "-a", "-b", "1", "-c", "1", "2", "3", "4", "5", "6", "7", "8"},
+            {"qq", "-d", "1", "2", "3", "-c", "1", "2", "-b", "-a", "1", "2", "3", "4", "5"},
+            {"qq", "w", "-a", "1", "-b", "-c", "1", "2", "3", "4", "5", "-d", "1", "2", "3"}
+        };
+
         Parser terminal;
-        terminal.addKey(Key('a', "a"), 0, 2);
-        terminal.addKey(Key('b', "b"), 0);
-        terminal.addKey(Key('c', "c"), 2, 4);
-        terminal.addKey(Key('d', "d"));
+        terminal.addKey(Key('a', "a1"), 0, 2);
+        terminal.addKey(Key('b', "b1"), 0);
+        terminal.addKey(Key('c', "c1"), 2, 4);
+        terminal.addKey(Key('d', "d1"));
 
         cout << name << "\n" << offset << "a: 0-2,  b: 0,  c: 2-4,  d: all\n";
-        for (auto& i : inputs) {
-            cout << offset << "Terminal input 1: " << i << "\n" << terminal.parse(i) << "\n";
+        for (int i = 0; i < input.size(); i++) {
+            cout << offset << "Terminal input " << i + 1 << ": " << input[i] << "\n" << terminal.softParse(input[i]) << "\n";
         }
     }
 
-    static void parser_test_1(string name, string offset) {
-        Args input_1 = {"qq", "-a", "1", "2", "-b", "-c", "1", "2", "3", "-d", "1", "2", "3", "4", "5"};
-        Args input_2 = {"qq", "-a", "1", "2", "3", "4", "-b", "1", "2", "-c", "-d", "1", "2", "3", "4"};
-        Args input_3 = {"qq", "-d", "1", "-a", "-b", "1", "-c", "1", "2", "3", "4", "5", "6", "7", "8"};
-        Args input_4 = {"qq", "-d", "1", "2", "3", "-c", "1", "2", "-b", "-a", "1", "2", "3", "4", "5"};
-        Args input_5 = {"qq", "w", "-a", "1", "-b", "-c", "1", "2", "3", "4", "5", "-d", "1", "2", "3"};
-
-        TestKey::parser_test_template(name, offset, {input_1, input_2, input_3, input_4, input_5});
-    }
-
     static void parser_test_2(string name, string offset) {
-        Args input_1 = {"qq", "-a", "--s", "2", "-b", "-c", "--a", "2", "3", "-d", "1", "2", "3", "4", "--"};
-        Args input_2 = {"qq", "-a", "1", "2", "---", "4", "-b", "1", "2", "-c", "-d", "---", "-c", "3", "4"};
+        std::vector<Args> input = {
+            {"qq", "-b", "--a", "1", "--c", "--b", "2", "-a", "3", "4", "--a", "5"},
+            {"qq", "--a", "--b", "1", "---a", "2", "---c", "3", "--b", "4", "---a"}
+        };
 
-        TestKey::parser_test_template(name, offset, {input_1, input_2});
+        Parser terminal, terminal_1;
+        terminal_1.addKey(Key('a', "a1"), 0, 2);
+        terminal_1.addKey(Key('c', "c1"), 0);
+        terminal.addKey(Key('a', "a1"), 0, 2);
+        terminal.addKey(Key('b', "b1"), &terminal_1);
+
+        cout << name << "\n" << offset << "a: 0-2,  b: 0, b-a: 0-2, b-c: 0\n";
+        for (int i = 0; i < input.size(); i++) {
+            cout << offset << "Terminal input " << i + 1 << ": " << input[i] << "\n" << terminal.softParse(input[i]) << "\n";
+        }
     }
 };
 
 int main() {
-    TestKey::parser_test_1("parser 1:", "");
+    // TestKey::parser_test_1("parser 1:", "");
     TestKey::parser_test_2("parser 2:", "");
     return 0;
 }

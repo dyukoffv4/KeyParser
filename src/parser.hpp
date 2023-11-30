@@ -37,5 +37,8 @@ namespace keyparser {
 		
 		Tasks parse(int argc, char* argv[]);
 		Tasks parse(Args input);
+
+		Tasks softParse(int argc, char* argv[]);
+		Tasks softParse(Args input);
 	};
 }

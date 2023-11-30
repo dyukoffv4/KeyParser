@@ -17,6 +17,7 @@ namespace keyparser {
 
 		bool operator<(const Key& key) const;
 		bool operator==(const Key& key) const;
+		bool operator!=(const Key& key) const;
 
 		bool full() const;
 

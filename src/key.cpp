@@ -7,14 +7,16 @@ keyparser::Key::Key(const char &s_data) {
 }
 
 keyparser::Key::Key(const std::string &l_data) {
-    if (l_data.empty()) throw std::invalid_argument("# Key.Key: Name of key can't be empty!");
+    if (l_data.size() < 2 || l_data[0] == '-')
+        throw std::invalid_argument("# Key.Key: Name of key can't be empty or short!");
     this->s_data = '-';
     this->l_data = l_data;
 }
 
 keyparser::Key::Key(const char &s_data, const std::string &l_data) {
     if (s_data == '~') throw std::invalid_argument("# Key.Key: Name '~' has been reserved!");
-    if (l_data.empty()) throw std::invalid_argument("# Key.Key: Name of key can't be empty!");
+    if (l_data.size() < 2 || l_data[0] == '-')
+        throw std::invalid_argument("# Key.Key: Name of key can't be empty or short!");
     this->s_data = s_data;
     this->l_data = l_data;
 }
@@ -26,6 +28,10 @@ bool keyparser::Key::operator<(const Key& key) const {
 
 bool keyparser::Key::operator==(const Key& key) const {
     return s_data == key.s_data && l_data == key.l_data;
+}
+
+bool keyparser::Key::operator!=(const Key& key) const {
+    return s_data != key.s_data || l_data != key.l_data;
 }
 
 bool keyparser::Key::full() const {
