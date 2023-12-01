@@ -191,11 +191,12 @@ keyparser::Tasks keyparser::Parser::softParse(Args input) {
 
     if (checkZoneStat(tasks.root.size(), ranges[Key::getRoot()]) == zoneType::LW) return Tasks();
 
-    for (auto &i : tasks.keys) {
-        Parser* parser = parsers[i.first];
-        if (parser) i.second = parser->softParse(i.second.root);
-        else if (i.first != Key::getRoot() && checkZoneStat(i.second.root.size(), ranges[i.first]) == zoneType::LW) {
-            std::cout << "# Parser.parser: Not enough parametrs for key \"" << curr_key.fname() << "\"!\n";
+    for (auto i = tasks.keys.begin(); i != tasks.keys.end(); i++) {
+        Parser* parser = parsers[i->first];
+        if (parser) i->second = parser->softParse(i->second.root);
+        else if (i->first != Key::getRoot() && checkZoneStat(i->second.root.size(), ranges[i->first]) == zoneType::LW) {
+            std::cout << "# Parser.parser: Not enough parametrs for key \"" << i->first.fname() << "\"!\n";
+            tasks.keys.erase(i--);
         }
     }
 

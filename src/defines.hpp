@@ -11,4 +11,5 @@ namespace keyparser {
     class Tasks;
 
     typedef std::vector<std::string> Args;
+    typedef std::vector<std::pair<Key, Tasks>> Parsed;
 }
