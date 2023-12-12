@@ -8,8 +8,7 @@
 namespace keyparser {
     class Key;
     class Parser;
-    class Tasks;
+    class Task;
 
     typedef std::vector<std::string> Args;
-    typedef std::vector<std::pair<Key, Tasks>> Parsed;
 }

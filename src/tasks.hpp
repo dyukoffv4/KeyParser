@@ -1,24 +1,27 @@
 #pragma once
 
 #include "key.hpp"
+#include <map>
 
 namespace keyparser {
-	class Tasks {
-	private:
-		Args* push;
+	typedef std::vector<std::pair<Key, Task>> TaskTree;
 
+	class Task {
 	public:
-		std::vector<std::pair<Key, Tasks>> keys;
+		TaskTree childs;
+		Key name;
 		Args root;
 
-		Tasks();
+		Task(Args args = {});	
+		Task(Key key, Args args = {});
 
-        bool pushKey(const Key& key);
+		void addKey(const Key& key);
 		bool popKey();
 
-		bool pushArg(const std::string& arg);
+		void addArg(const std::string& arg);
 		bool popArg();
 
-		void lock();
+		Key getkey();
+		int argnum();
 	};
 }

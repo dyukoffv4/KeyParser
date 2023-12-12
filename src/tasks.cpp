@@ -1,38 +1,33 @@
 #include "tasks.hpp"
 
-keyparser::Tasks::Tasks() {
-    push = &root;
+keyparser::Task::Task(Args args) : name(Key::getRoot()), root(args) {}
+
+keyparser::Task::Task(Key key, Args args) : name(key), root(args) {}
+
+void keyparser::Task::addKey(const Key& key) {
+    childs.push_back({key, Task(key)});
 }
 
-bool keyparser::Tasks::pushKey(const Key& key) {
-    if (!push) return false;
-    if (key == Key::getRoot()) push = &root;
-    else {
-        keys.push_back({key, Tasks()});
-        push = &keys.back().second.root;
-    }
+bool keyparser::Task::popKey() {
+    if (childs.empty()) return false;
+    childs.pop_back();
     return true;
 }
 
-bool keyparser::Tasks::popKey() {
-    if (!push || keys.empty()) return false;
-    keys.pop_back();
-    push = &root;
+void keyparser::Task::addArg(const std::string& arg) {
+    root.push_back(arg);
+}
+
+bool keyparser::Task::popArg() {
+    if (root.empty()) return false;
+    root.pop_back();
     return true;
 }
 
-bool keyparser::Tasks::pushArg(const std::string& arg) {
-    if (!push) return false;
-    push->push_back(arg);
-    return true;
+keyparser::Key keyparser::Task::getkey() {
+    return name;
 }
 
-bool keyparser::Tasks::popArg() {
-    if (!push || push->empty()) return false;
-    push->pop_back();
-    return true;
-}
-
-void keyparser::Tasks::lock() {
-    push = nullptr;
+int keyparser::Task::argnum() {
+    return root.size();
 }

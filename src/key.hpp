@@ -26,6 +26,6 @@ namespace keyparser {
 		std::string fname() const;
 
 		friend class Parser;
-		friend class Tasks;
+		friend class Task;
 	};
 }
