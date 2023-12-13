@@ -1,69 +1,70 @@
-#include "../../src/terminal.hpp"
+#include "../../src/parser.hpp"
 
-using namespace KP;
+using namespace keyparser;
 using namespace std;
 
-class TestKey {
-public:
-    static void range_test(string name, string offset) {
-        cout << name << "\n";
-        Key key('c', "c");
-        cout << offset << "1: " << (key[0] == Key::ZS_I && key[3] == Key::ZS_I && key[5] == Key::ZS_I) << "\n";
-        key = Key('c', "c", 3, 3);
-        cout << offset << "2: " << (key[0] == Key::ZS_L && key[3] == Key::ZS_I && key[5] == Key::ZS_H) << "\n";
-        key = Key('c', "c", 3);
-        cout << offset << "3: " << (key[0] == Key::ZS_L && key[3] == Key::ZS_I && key[5] == Key::ZS_I) << "\n";
-        key = Key('c', "c", -1, 3);
-        cout << offset << "4: " << (key[0] == Key::ZS_I && key[3] == Key::ZS_I && key[5] == Key::ZS_H) << "\n";
-        key = Key('c', "c", 3, 5);
-        cout << offset << "5: " << (key[0] == Key::ZS_L && key[3] == Key::ZS_I && key[5] == Key::ZS_I && key[7] == Key::ZS_H) << "\n\n";
-    }
+std::ostream &operator<<(std::ostream &out, const keyparser::Args &data) {
+    if (data.size() == 0) return out;
+    for (auto i = data.begin(); i != --data.end(); i++) out << *i << ", ";
+    out << *(--data.end());
+    return out;
+}
 
-    static void state_test(string name, string offset) {
-        cout << name << "\n";
-        Key key('c');
-        cout << offset << "1: " << (key.getState() == Key::S) << "\n";
-        key = Key('c', "c");
-        cout << offset << "2: " << (key.getState() == Key::A) << "\n";
-        key = Key("c");
-        cout << offset << "3: " << (key.getState() == Key::L) << "\n";
+char task_print(std::ostream &out, const keyparser::Task &data, std::string offset = "") {
+    out << offset << data.name.fname() << " : " << data.root << '\n';
+    for (auto &i : data.childs) task_print(out, i.second, offset + "  ");
+    return ' ';
+}
+
+bool operator==(const keyparser::Task &f, const keyparser::Task &s) {
+    if (f.childs.empty() && s.childs.empty()) return f.root == s.root;
+    if (f.childs.empty() || s.childs.empty() || f.childs.size() != s.childs.size()) return false;
+    if (f.root != s.root) return false;
+    for (int i = 0; i < f.childs.size(); i++) {
+        if (!(f.childs[i].first == s.childs[i].first && f.childs[i].second == s.childs[i].second)) return false;
+    }
+    return true;
+}
+
+void test(const string &header, Parser &parser, const vector<Args> &inputs, const vector<Task> &results) {
+    cout << header << "\n\n";
+    for (int i = 0; i < inputs.size(); i++) {
+        cout << "Test " << i + 1 << ": " << inputs[i] << "\n";
         try {
-            key = Key("");
-            cout << offset << "4: " << false << "\n\n";
+            Task result = parser.parse(inputs[i]);
+            cout << "Computed:\n" << task_print(cout, result) << "\n";
+            cout << "Expected:\n" << task_print(cout, results[i]) << "\n";
+            cout << "Result:  " << (result == results[i]) << "\n";
         }
-        catch (exception exp) {
-            cout << offset << "4: " << true << "\n\n";
+        catch (std::invalid_argument e) {
+            cout << "Computed:\n" << e.what() << "\n";
+            cout << "Expected:\n" << task_print(cout, results[i]) << "\n";
+            cout << "Result:  ERROR\n";
         }
     }
-};
-
-void test(Args input) {
-    cout << "  ";
-    for (auto &i : input) cout << i << ' ';
-    cout << "\n";
 }
 
 int main() {
-    TestKey::range_test("Key 1:", "  ");
-    TestKey::state_test("Key 2:", "  ");
+    std::vector<Args> input = {
+        {"-a", "1", "2", "3", "--b", "---c", "1", "---d", "--e", "1", "2", "-f", "1", "2", "3", "-g", "1", "2"}
+    };
 
-    Terminal terminal(Terminal::RS_S);
-    terminal.setRootRange(3, 3);
-    terminal.setRoot(test);
-    terminal.setKey(Key('a', "a", 0, 2), test);
-    terminal.setKey(Key('b', "b", 0, 0), test);
-    terminal.setKey(Key('c', "c", 2, 4), test);
-    terminal.setKey(Key('d', "d"), test);
+    std::vector<Task> output = std::vector<Task>(1);
+    output[0] = Task({"3"}, {{Key('a'), Task({"1", "2", "3"})}, {Key('f'), Task({"1", "2"})}, {Key('g'), Task({"1", "2"})}});
+    output[0].childs[0].second.childs = {{Key('b'), Task()}, {Key('e'), Task({"1", "2"})}};
+    output[0].childs[0].second.childs[0].second.childs = {{Key('c'), Task({"1"})}, {Key('d'), Task()}};
 
-    Args input_1 = {"qq", "-a", "1", "2", "-b", "-c", "1", "2", "3", "-d", "1", "2", "3", "4", "5"};
-    Args input_2 = {"qq", "-a", "1", "2", "3", "4", "-b", "1", "2", "-c", "-d", "1", "2", "3", "4"};
-    Args input_3 = {"qq", "-d", "1", "-a", "-b", "1", "-c", "1", "2", "3", "4", "5", "6", "7", "8"};
-    Args input_4 = {"qq", "-d", "1", "2", "3", "-c", "1", "2", "-b", "-a", "1", "2", "3", "4", "5"};
-    Args input_5 = {"qq", "w", "-a", "1", "-b", "-c", "1", "2", "3", "4", "5", "-d", "1", "2", "3"};
+    Parser parser, a_parser(2, 4), ab_parser(0);
+    ab_parser.addKey(Key('c'), 0, 2);
+    ab_parser.addKey(Key('d'), 0);
 
-    cout << "Terminal input 1 (a b c d):\n"; terminal.execute(input_1); cout << "\n";
-    cout << "Terminal input 2 (a b c d):\n"; terminal.execute(input_2); cout << "\n";
-    cout << "Terminal input 3 (d a b c):\n"; terminal.execute(input_3); cout << "\n";
-    cout << "Terminal input 4 (d c b a):\n"; terminal.execute(input_4); cout << "\n";
-    cout << "Terminal input 5 (a b c d):\n"; terminal.execute(input_5); cout << "\n";
+    a_parser.addKey(Key('b'), &ab_parser);
+    a_parser.addKey(Key('e'), 2);
+
+    parser.addKey(Key('a'), &a_parser);
+    parser.addKey(Key('f'), 0, 2);
+    parser.addKey(Key('g'), 2, 4);
+
+    test("Keys:  ~(0,:)-->[a(2,4)-->[b(0)-->[c(0,2);  d(0)];  e(2)];  f(0,2);  g(2,4)]", parser, input, output);
+    return 0;
 }

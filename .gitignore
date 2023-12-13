@@ -1,5 +1,8 @@
 .vscode
+.idea
+
 /out
 /test/out
+
 *.deb
 *.temp

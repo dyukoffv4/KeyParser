@@ -5,8 +5,10 @@
 #include <exception>
 #include <stdexcept>
 
-namespace KP {
-    typedef std::vector<std::string> Args;
+namespace keyparser {
     class Key;
-    class Terminal;
+    class Parser;
+    class Task;
+
+    typedef std::vector<std::string> Args;
 }

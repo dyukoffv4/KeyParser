@@ -2,37 +2,30 @@
 
 #include "defines.hpp"
 
-namespace KP {
+namespace keyparser {
 	class Key {
 	private:
 		char s_data;
 		std::string l_data;
-		int lk_num;
-		int hk_num;
 
-		static Key getNull(int f_num = -1, int s_num = -1);
-		static Key getRoot(int f_num = -1, int s_num = -1);
+		static Key getRoot();
 
 	public:
-		enum State{E, S, L, A};
-		enum rangeState{ZS_L, ZS_I, ZS_H};
-
-		explicit Key(const char& s_data, int f_num = -1, int s_num = -1);
-		explicit Key(const std::string& l_data, int f_num = -1, int s_num = -1);
-		explicit Key(const char& s_data, const std::string& l_data, int f_num = -1, int s_num = -1);
-
-		State getState() const;
+		explicit Key(const char& s_data);
+		explicit Key(const std::string& l_data);
+		explicit Key(const char& s_data, const std::string& l_data);
 
 		bool operator<(const Key& key) const;
 		bool operator==(const Key& key) const;
-		rangeState operator[](const int& num) const;
+		bool operator!=(const Key& key) const;
+
+		bool full() const;
 
 		char sname() const;
 		std::string lname() const;
 		std::string fname() const;
 
-		Key makeState(State) const;
-
-		friend class Terminal;
+		friend class Parser;
+		friend class Task;
 	};
 }
