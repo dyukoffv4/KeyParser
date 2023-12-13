@@ -16,7 +16,7 @@ namespace keyparser {
 		enum zoneType{LW, IN, HG};
 		int static checkZone(unsigned number, std::pair<int, int> zone);
 
-		std::pair<Task, int> hardParse(const Args& input, int curr, int level, Task* parent);
+		std::pair<Task, int> hardParse(const Args& input, int curr, int level, const Key& this_key);
 
 	public:
 		Parser(int f_num, int s_num);

@@ -85,18 +85,18 @@ keyparser::Task keyparser::Parser::parse(int argc, char* argv[]) {
     Args input;
 	for (int i = 1; i < argc; i++) input.push_back(argv[i]);
 
-    std::pair<Task, int> result = hardParse(input, 0, 0, nullptr);
+    std::pair<Task, int> result = hardParse(input, 0, 0, Key::getRoot());
     if (result.second == input.size()) return result.first;
     throw std::invalid_argument("# Parser.parse: Too much arguments were entered!\n");
 }
 
 keyparser::Task keyparser::Parser::parse(Args input) {
-    std::pair<Task, int> result = hardParse(input, 0, 0, nullptr);
+    std::pair<Task, int> result = hardParse(input, 0, 0, Key::getRoot());
     if (result.second == input.size()) return result.first;
     throw std::invalid_argument("# Parser.parse: Too much arguments were entered!\n");
 }
 
-std::pair<keyparser::Task, int> keyparser::Parser::hardParse(const Args& input, int curr, int level, Task* parent) {
+std::pair<keyparser::Task, int> keyparser::Parser::hardParse(const Args& input, int curr, int level, const Key& this_key) {
     Task tasks;
     Task* push_task = &tasks;
     Key push_key = Key::getRoot(), root_key = Key::getRoot(), next_key = Key::getRoot();
@@ -114,41 +114,49 @@ std::pair<keyparser::Task, int> keyparser::Parser::hardParse(const Args& input, 
             push_task->addArg(input[i]);
             continue;
         }
-
+        
         if (argt.first - level == 1) {
             next_key = argt.second == argType::SKEY ? Key(input[i][argt.first]): Key(input[i].substr(argt.first + 1));
             if (!parsers.count(next_key)) {
-                throw std::invalid_argument("# Parser.parse: Key \"" + next_key.fname() + "\" doesh't exist!\n");
+                throw std::invalid_argument("# Parser.parse: Key \"" + next_key.fname() + "\" doesn't exist!\n");
             }
             tasks.addKey(next_key);
             if (!parsers[next_key]) {
                 if (checkZone(push_task->argnum(), ranges[push_key]) == zoneType::LW) {
-                    if (push_key == root_key) push_key = parent->childs.back().first;
-                    throw std::invalid_argument("# Parser.parse: Too low arguments for key \"" + push_key.fname() + "\"!\n");
+                    std::string estart = "# Parser.parse: Too low arguments for key \"";
+                    if (push_key == root_key) throw std::invalid_argument(estart + this_key.fname() + "\"!\n");
+                    throw std::invalid_argument(estart + this_key.fname() + "\"->\"" + push_key.fname() + "\"!\n");
                 }
                 push_key = next_key;
                 push_task = &tasks.childs.back().second;
             }
             else {
-                std::pair<Task, int> result = hardParse(input, i + 1, level + 1, &tasks);
-                tasks.childs.back().second = result.first;
-                i = result.second - 1;
+                try {
+                    std::pair<Task, int> result = parsers[next_key]->hardParse(input, i + 1, level + 1, next_key);
+                    tasks.childs.back().second = result.first;
+                    i = result.second - 1;
+                }
+                catch (std::invalid_argument e) {
+                    throw std::invalid_argument("# Parser.parse: At key \"" + this_key.fname() + "\":\n" + e.what());
+                }
             }
             continue;
         }
 
         if (argt.first - level < 1) {
             if (checkZone(push_task->argnum(), ranges[push_key]) == zoneType::LW) {
-                if (push_key == root_key) push_key = parent->childs.back().first;
-                throw std::invalid_argument("# Parser.parse: Too low arguments for key \"" + push_key.fname() + "\"!\n");
+                std::string estart = "# Parser.parse: Too low arguments for key \"";
+                if (push_key == root_key) throw std::invalid_argument(estart + this_key.fname() + "\"!\n");
+                throw std::invalid_argument(estart + this_key.fname() + "\"->\"" + push_key.fname() + "\"!\n");
             }
             return {tasks, i};
         }
     }
 
     if (checkZone(push_task->argnum(), ranges[push_key]) == zoneType::LW) {
-        if (push_key == root_key) push_key = parent->childs.back().first;
-        throw std::invalid_argument("# Parser.parse: Too low arguments for key \"" + push_key.fname() + "\"!\n");
+        std::string estart = "# Parser.parse: Too low arguments for key \"";
+        if (push_key == root_key) throw std::invalid_argument(estart + this_key.fname() + "\"!\n");
+        throw std::invalid_argument(estart + this_key.fname() + "\"->\"" + push_key.fname() + "\"!\n");
     }
 
     return {tasks, input.size()};

@@ -12,8 +12,8 @@ namespace keyparser {
 		Key name;
 		Args root;
 
-		Task(Args args = {});	
-		Task(Key key, Args args = {});
+		Task();
+		Task(Args args, TaskTree tasks = {});
 
 		void addKey(const Key& key);
 		bool popKey();
