@@ -121,14 +121,13 @@ std::pair<keyparser::Task, int> keyparser::Parser::hardParse(const Args& input, 
             push_task->addArg(input[i]);
             continue;
         }
-        
+
         // -w <--b>
         if (argt.first - level == 1) {
             next_key = argt.second == argType::SKEY ? Key(input[i][argt.first]): Key(input[i].substr(argt.first + 1));
             if (!parsers.count(next_key)) {
                 throw std::invalid_argument("# Parser.parse: Key \"" + next_key.fname() + "\" doesn't exist!\n");
             }
-            tasks.addKey(fullkeys.find(next_key)->second);
             if (!parsers[next_key]) {
                 if (checkZone(push_task->argnum(), ranges[push_key]) == zoneType::LW) {
                     std::string estart = "# Parser.parse: Too low arguments for key \"";
@@ -136,11 +135,13 @@ std::pair<keyparser::Task, int> keyparser::Parser::hardParse(const Args& input, 
                     throw std::invalid_argument(estart + this_key.fname() + "\"->\"" + push_key.fname() + "\"!\n");
                 }
                 push_key = next_key;
+                tasks.addKey(fullkeys.find(next_key)->second);
                 push_task = &tasks.childs.back().second;
             }
             else {
                 try {
                     std::pair<Task, int> result = parsers[next_key]->hardParse(input, i + 1, level + 1, next_key);
+                    tasks.addKey(fullkeys.find(next_key)->second);
                     result.first.name = tasks.childs.back().second.name;
                     tasks.childs.back().second = result.first;
                     i = result.second - 1;
