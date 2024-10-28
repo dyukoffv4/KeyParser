@@ -45,14 +45,21 @@ void test(const string &header, Parser &parser, const vector<Args> &inputs, cons
 }
 
 int main() {
-    std::vector<Args> input = {
+    vector<Args> input = {
         {"-a", "1", "2", "3", "--b", "---c", "1", "---d", "--e", "1", "2", "-f", "1", "2", "3", "-g", "1", "2"}
     };
 
-    std::vector<Task> output = std::vector<Task>(1);
-    output[0] = Task({"3"}, {{Key('a'), Task({"1", "2", "3"})}, {Key('f'), Task({"1", "2"})}, {Key('g'), Task({"1", "2"})}});
-    output[0].childs[0].second.childs = {{Key('b'), Task()}, {Key('e'), Task({"1", "2"})}};
-    output[0].childs[0].second.childs[0].second.childs = {{Key('c'), Task({"1"})}, {Key('d'), Task()}};
+    vector<Task> output(1);
+    output[0] = Task({"3"}, {
+        {Key('a'), Task({"1", "2", "3"}, {
+            {Key('b'), Task({}, {
+                {Key('c'), Task({"1"})}, 
+                {Key('d'), Task()}
+            })}, 
+            {Key('e'), Task({"1", "2"})}})}, 
+        {Key('f'), Task({"1", "2"})}, 
+        {Key('g'), Task({"1", "2"})}
+    });
 
     Parser parser, a_parser(2, 4), ab_parser(0);
     ab_parser.addKey(Key('c'), 0, 2);
