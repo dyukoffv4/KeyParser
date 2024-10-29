@@ -1,11 +1,16 @@
 #include "parser.hpp"
 
+/// @brief Create Parser with partially limited number of root parameters
+/// @param f_num Lower limit of parameters [int]
+/// @param s_num Upper limit of parameters [int]
 keyparser::Parser::Parser(int f_num, int s_num) {
     if (f_num > s_num && s_num > -1) throw std::invalid_argument("# Parser.Parser: First num can't be bigger then second!");
     parsers[Key::getRoot()] = nullptr;
     ranges[Key::getRoot()] = {f_num, s_num};
 }
 
+/// @brief Create Parser with fixed number of root parameters
+/// @param f_num Number of parameters [int]
 keyparser::Parser::Parser(int f_num) : Parser(f_num, f_num) {}
 
 keyparser::Parser &keyparser::Parser::operator=(const Parser &parser) {
@@ -18,6 +23,10 @@ keyparser::Parser &keyparser::Parser::operator=(const Parser &parser) {
     return *this;
 }
 
+/// @brief Add key with partially limited number of parameters
+/// @param key Key [Key&]
+/// @param f_num Lower limit of parameters [int]
+/// @param s_num Upper limit of parameters [int]
 void keyparser::Parser::addKey(const Key& key, int f_num, int s_num) {
     if (f_num > s_num && s_num > -1) throw std::invalid_argument("# Parser.addKey: First num can't be bigger then second!");
     delKey(key);
@@ -36,10 +45,16 @@ void keyparser::Parser::addKey(const Key& key, int f_num, int s_num) {
     }
 }
 
+/// @brief Add key with fixed number of parameters
+/// @param key Key [Key&]
+/// @param f_num Number of parameters [int]
 void keyparser::Parser::addKey(const Key& key, int f_num) {
     addKey(key, f_num, f_num);
 }
 
+/// @brief Add key with own subkeys
+/// @param key Key [Key&]
+/// @param parser Another parser with setted up keys [Parser*]
 void keyparser::Parser::addKey(const Key& key, Parser* parser) {
     addKey(key, -1, -1);
     if (key.full()) {
@@ -49,6 +64,8 @@ void keyparser::Parser::addKey(const Key& key, Parser* parser) {
     else parsers[key] = parser;
 }
 
+/// @brief Delete a full key from storage
+/// @param key Variant of a key to delete [Key&]
 void keyparser::Parser::delKey(const Key& key) {
     Key fkey = key;
     if (!fkey.full()) {
@@ -73,15 +90,24 @@ void keyparser::Parser::delKey(const Key& key) {
     }
 }
 
+/// @brief Set limited number of root parameters
+/// @param f_num Lower limit of parameters [int]
+/// @param s_num Upper limit of parameters [int]
 void keyparser::Parser::setArgnum(int f_num, int s_num) {
     if (f_num > s_num && s_num > -1) throw std::invalid_argument("# Parser.setArgnum: First num can't be bigger then second!");
     ranges[Key::getRoot()] = {f_num, s_num};
 }
 
+/// @brief Set fixed of root parameters
+/// @param f_num Number of parameters [int]
 void keyparser::Parser::setArgnum(int f_num) {
     ranges[Key::getRoot()] = {f_num, f_num};
 }
 
+/// @brief Parses keys and arguments according to the specified settings
+/// @param argc Number of arguments [int]
+/// @param argv Array of arguments [char**]
+/// @return Object with structured keys and parametrs for each key [Task]
 keyparser::Task keyparser::Parser::parse(int argc, char* argv[]) {
     Args input;
 	for (int i = 1; i < argc; i++) input.push_back(argv[i]);
@@ -91,22 +117,23 @@ keyparser::Task keyparser::Parser::parse(int argc, char* argv[]) {
     throw std::invalid_argument("# Parser.parse: Too much arguments were entered!\n");
 }
 
+/// @brief Parses keys and arguments according to the specified settings
+/// @param input List of arguments to parse [vector<string>]
+/// @return Object with structured keys and parametrs for each key [Task]
 keyparser::Task keyparser::Parser::parse(Args input) {
     std::pair<Task, int> result = hardParse(input, 0, 0, Key::getRoot());
     if (result.second == input.size()) return result.first;
     throw std::invalid_argument("# Parser.parse: Too much arguments were entered!\n");
 }
 
-/// @brief Parses keys and arguments according to the specified settings
-/// @param input List of arguments to parse (Same for all iterations)
-/// @param curr Index of current argument
-/// @param level The level for which parsing is performed
-/// @param this_key The key for which parsing is performed
-/// @return Parsed keys and arguments, Index of current argument from input
 std::pair<keyparser::Task, int> keyparser::Parser::hardParse(const Args& input, int curr, int level, const Key& this_key) {
     Task tasks;
     Task* push_task = &tasks;
     Key push_key = Key::getRoot(), root_key = Key::getRoot(), next_key = Key::getRoot();
+
+    // push_task switching between root and last child.
+    // push_key switching between root and last child.
+    // root_key and next_key are temporary store for keys.
 
     for (int i = curr; i < input.size(); i++) {
         std::pair<int, int> argt = checkArg(input[i]);
@@ -122,7 +149,7 @@ std::pair<keyparser::Task, int> keyparser::Parser::hardParse(const Args& input, 
             continue;
         }
 
-        // -w <--b>
+        // TRUE if found key level == (current key level) + 1
         if (argt.first - level == 1) {
             next_key = argt.second == argType::SKEY ? Key(input[i][argt.first]): Key(input[i].substr(argt.first + 1));
             if (!parsers.count(next_key)) {
@@ -153,7 +180,7 @@ std::pair<keyparser::Task, int> keyparser::Parser::hardParse(const Args& input, 
             continue;
         }
 
-        // --w <--b, -b>
+        // TRUE if found key level <= current key level
         if (argt.first - level < 1) {
             if (checkZone(push_task->argnum(), ranges[push_key]) == zoneType::LW) {
                 std::string estart = "# Parser.parse: Too low arguments for key \"";
@@ -172,12 +199,14 @@ std::pair<keyparser::Task, int> keyparser::Parser::hardParse(const Args& input, 
         throw std::invalid_argument(estart + this_key.fname() + "\"->\"" + push_key.fname() + "\"!\n");
     }
 
+    // Last parameter is current index of input arguments
     return {tasks, input.size()};
 }
 
 std::pair<int, int> keyparser::Parser::checkArg(const std::string& arg) {
     if (arg.empty()) throw std::invalid_argument("# Parser.checkArg: Empty argument were got!\n");
     
+    // Return (0, ...) if Argument, (1+, ...) if Key
     for (int i = 0; i < arg.size(); i++) {
         if (arg[i] != '-') {
             if (i == 0) return {0, argType::ARG};
