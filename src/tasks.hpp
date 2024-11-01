@@ -21,7 +21,6 @@ namespace keyparser {
 		void addArg(const std::string& arg);
 		bool popArg();
 
-		Key getkey();
 		int argnum();
 	};
 }

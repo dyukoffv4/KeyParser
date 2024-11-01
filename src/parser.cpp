@@ -111,96 +111,63 @@ void keyparser::Parser::setArgnum(int f_num) {
 keyparser::Task keyparser::Parser::parse(int argc, char* argv[]) {
     Args input;
 	for (int i = 1; i < argc; i++) input.push_back(argv[i]);
-
-    std::pair<Task, int> result = hardParse(input, 0, 0, Key::getRoot());
-    if (result.second == input.size()) return result.first;
-    throw std::invalid_argument("# Parser.parse: Too much arguments were entered!\n");
+    return parse(input);
 }
 
 /// @brief Parses keys and arguments according to the specified settings
 /// @param input List of arguments to parse [vector<string>]
 /// @return Object with structured keys and parametrs for each key [Task]
 keyparser::Task keyparser::Parser::parse(Args input) {
-    std::pair<Task, int> result = hardParse(input, 0, 0, Key::getRoot());
-    if (result.second == input.size()) return result.first;
-    throw std::invalid_argument("# Parser.parse: Too much arguments were entered!\n");
+    Task result = dumbParse(input);
+    try { upgradeTasks(result); }
+    catch (labeled_error e) {
+        switch (e.label) {
+        case 1:
+            throw std::invalid_argument("# Parser.parse: Key " + std::string(e.what()) + " doesn't exist!\n");
+            break;
+        case 2:
+            throw std::invalid_argument("# Parser.parse: Key " + std::string(e.what()) + " hasn't nested keys!\n");
+            break;
+        case 3:
+            throw std::invalid_argument("# Parser.parse: Key " + std::string(e.what()) + " received few parameters!\n");
+            break;
+        default:
+            throw e;
+            break;
+        }
+    }
+    switch (checkZone(result.argnum(), ranges[result.name])) {
+        case zoneType::HG:
+            throw std::invalid_argument("# Parser.parse: Received much parameters!\n");
+            break;
+        case zoneType::LW:
+            throw std::invalid_argument("# Parser.parse: Received few parameters!\n");
+            break;
+    }
+    return result;
 }
 
-std::pair<keyparser::Task, int> keyparser::Parser::hardParse(const Args& input, int curr, int level, const Key& this_key) {
+/// @brief Parses keys and arguments according to base syntax
+/// @param input List of arguments to parse [vector<string>]
+/// @return Object with structured keys and parametrs for each key [Task]
+keyparser::Task keyparser::Parser::dumbParse(const Args& input) {
     Task tasks;
-    Task* push_task = &tasks;
-    Key push_key = Key::getRoot(), root_key = Key::getRoot(), next_key = Key::getRoot();
-
-    // push_task switching between root and last child.
-    // push_key switching between root and last child.
-    // root_key and next_key are temporary store for keys.
-
-    for (int i = curr; i < input.size(); i++) {
+    std::vector<Task*> task_stack = {&tasks};
+    for (int i = 0; i < input.size(); i++) {
         std::pair<int, int> argt = checkArg(input[i]);
-
         if (argt.second == argType::ARG) {
-            if (checkZone(push_task->argnum() + 1, ranges[push_key]) == zoneType::HG) {
-                if (push_key == root_key) return {tasks, i};
-                push_key = root_key;
-                push_task = &tasks;
-                if (checkZone(push_task->argnum() + 1, ranges[push_key]) == zoneType::HG) return {tasks, i};
-            }
-            push_task->addArg(input[i]);
+            task_stack.back()->addArg(input[i]);
             continue;
         }
-
-        // TRUE if found key level == (current key level) + 1
-        if (argt.first - level == 1) {
-            next_key = argt.second == argType::SKEY ? Key(input[i][argt.first]): Key(input[i].substr(argt.first + 1));
-            if (!parsers.count(next_key)) {
-                throw std::invalid_argument("# Parser.parse: Key \"" + next_key.fname() + "\" doesn't exist!\n");
-            }
-            if (!parsers[next_key]) {
-                if (checkZone(push_task->argnum(), ranges[push_key]) == zoneType::LW) {
-                    std::string estart = "# Parser.parse: Too low arguments for key \"";
-                    if (push_key == root_key) throw std::invalid_argument(estart + this_key.fname() + "\"!\n");
-                    throw std::invalid_argument(estart + this_key.fname() + "\"->\"" + push_key.fname() + "\"!\n");
-                }
-                push_key = next_key;
-                tasks.addKey(fullkeys.find(next_key)->second);
-                push_task = &tasks.childs.back().second;
-            }
-            else {
-                try {
-                    std::pair<Task, int> result = parsers[next_key]->hardParse(input, i + 1, level + 1, next_key);
-                    tasks.addKey(fullkeys.find(next_key)->second);
-                    result.first.name = tasks.childs.back().second.name;
-                    tasks.childs.back().second = result.first;
-                    i = result.second - 1;
-                }
-                catch (std::invalid_argument e) {
-                    throw std::invalid_argument("# Parser.parse: At key \"" + this_key.fname() + "\":\n" + e.what());
-                }
-            }
+        if (argt.first - int(task_stack.size()) <= 0) {
+            task_stack.erase(task_stack.begin() + argt.first, task_stack.end());
+            task_stack.back()->addKey(argt.second == argType::SKEY ? Key(input[i][argt.first]): Key(input[i].substr(argt.first + 1)));
+            task_stack.push_back(&task_stack.back()->childs.back().second);
             continue;
         }
-
-        // TRUE if found key level <= current key level
-        if (argt.first - level < 1) {
-            if (checkZone(push_task->argnum(), ranges[push_key]) == zoneType::LW) {
-                std::string estart = "# Parser.parse: Too low arguments for key \"";
-                if (push_key == root_key) throw std::invalid_argument(estart + this_key.fname() + "\"!\n");
-                throw std::invalid_argument(estart + this_key.fname() + "\"->\"" + push_key.fname() + "\"!\n");
-            }
-            return {tasks, i};
-        }
-
         throw std::invalid_argument("# Parser.parse: Undefined argument \"" + input[i] + "\"!\n");
     }
-
-    if (checkZone(push_task->argnum(), ranges[push_key]) == zoneType::LW) {
-        std::string estart = "# Parser.parse: Too low arguments for key \"";
-        if (push_key == root_key) throw std::invalid_argument(estart + this_key.fname() + "\"!\n");
-        throw std::invalid_argument(estart + this_key.fname() + "\"->\"" + push_key.fname() + "\"!\n");
-    }
-
-    // Last parameter is current index of input arguments
-    return {tasks, input.size()};
+    return tasks;
 }
 
 std::pair<int, int> keyparser::Parser::checkArg(const std::string& arg) {
@@ -223,4 +190,31 @@ int keyparser::Parser::checkZone(unsigned number, std::pair<int, int> zone) {
     if (zone.first < 0) return (zone.second < 0 || zone.second >= number) ? zoneType::IN : zoneType::HG;
     if (zone.first <= number && zone.second >= number) return zoneType::IN;
     return zone.first > number ? zoneType::LW : zoneType::HG;
+}
+
+void keyparser::Parser::upgradeTasks(Task& task) {
+    for (auto &i : task.childs) {
+        Task& child = i.second;
+
+        if (!parsers.count(child.name)) throw labeled_error(child.name.fname(), 1);
+        if (parsers[child.name]) {
+            try {
+                parsers[child.name]->upgradeTasks(child);
+            }
+            catch (labeled_error e) {
+                throw labeled_error(child.name.fname() + " -> " + e.what(), e.label);
+            }
+        }
+        else if (!child.childs.empty()) throw labeled_error(child.name.fname(), 2);
+
+        switch (checkZone(child.argnum(), ranges[child.name])) {
+        case zoneType::HG:
+            task.root.assign(child.root.begin() + ranges[child.name].second, child.root.end());
+            child.root.erase(child.root.begin() + ranges[child.name].second, child.root.end());
+            break;
+        case zoneType::LW:
+            throw labeled_error(child.name.fname(), 3);
+            break;
+        }
+    }
 }

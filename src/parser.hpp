@@ -4,6 +4,12 @@
 #include "tasks.hpp"
 
 namespace keyparser {
+	class labeled_error : public std::invalid_argument {
+	public:
+		int label;
+		labeled_error(std::string msg, int label) : std::invalid_argument(msg), label(label) {}
+	};
+
 	class Parser {
 	private:
 		std::map<Key, Parser*> parsers;
@@ -16,7 +22,7 @@ namespace keyparser {
 		enum zoneType{LW, IN, HG};
 		int static checkZone(unsigned number, std::pair<int, int> zone);
 
-		std::pair<Task, int> hardParse(const Args& input, int curr, int level, const Key& this_key);
+		void upgradeTasks(Task& tasks);
 
 	public:
 		Parser(int f_num, int s_num);
@@ -31,8 +37,10 @@ namespace keyparser {
 
 		void setArgnum(int f_num, int s_num);
 		void setArgnum(int f_num);
-		
+
 		Task parse(int argc, char* argv[]);
 		Task parse(Args input);
+
+		Task static dumbParse(const Args& input);
 	};
 }
