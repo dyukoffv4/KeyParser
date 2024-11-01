@@ -42,11 +42,6 @@ bool keyparser::Task::popArg() {
     return true;
 }
 
-/// @brief Return self key full name
-keyparser::Key keyparser::Task::getkey() {
-    return name;
-}
-
 /// @brief Return number of root parameters
 int keyparser::Task::argnum() {
     return root.size();
