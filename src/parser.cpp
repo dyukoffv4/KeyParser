@@ -120,7 +120,7 @@ keyparser::Task keyparser::Parser::parse(int argc, char* argv[]) {
 keyparser::Task keyparser::Parser::parse(Args input) {
     Task result = dumbParse(input);
     try { upgradeTasks(result); }
-    catch (labeled_error e) {
+    catch (p_invalid_argument e) {
         switch (e.label) {
         case 1:
             throw std::invalid_argument("# Parser.parse: Key " + std::string(e.what()) + " doesn't exist!\n");
@@ -162,7 +162,7 @@ keyparser::Task keyparser::Parser::dumbParse(const Args& input) {
         if (argt.first - int(task_stack.size()) <= 0) {
             task_stack.erase(task_stack.begin() + argt.first, task_stack.end());
             task_stack.back()->addKey(argt.second == argType::SKEY ? Key(input[i][argt.first]): Key(input[i].substr(argt.first + 1)));
-            task_stack.push_back(&task_stack.back()->childs.back().second);
+            task_stack.push_back(&task_stack.back()->childs.back());
             continue;
         }
         throw std::invalid_argument("# Parser.parse: Undefined argument \"" + input[i] + "\"!\n");
@@ -194,26 +194,24 @@ int keyparser::Parser::checkZone(unsigned number, std::pair<int, int> zone) {
 
 void keyparser::Parser::upgradeTasks(Task& task) {
     for (auto &i : task.childs) {
-        Task& child = i.second;
-
-        if (!parsers.count(child.name)) throw labeled_error(child.name.fname(), 1);
-        if (parsers[child.name]) {
+        if (!parsers.count(i.name)) throw p_invalid_argument(i.name.fname(), 1);
+        if (parsers[i.name]) {
             try {
-                parsers[child.name]->upgradeTasks(child);
+                parsers[i.name]->upgradeTasks(i);
             }
-            catch (labeled_error e) {
-                throw labeled_error(child.name.fname() + " -> " + e.what(), e.label);
+            catch (p_invalid_argument e) {
+                throw p_invalid_argument(i.name.fname() + " -> " + e.what(), e.label);
             }
         }
-        else if (!child.childs.empty()) throw labeled_error(child.name.fname(), 2);
+        else if (!i.childs.empty()) throw p_invalid_argument(i.name.fname(), 2);
 
-        switch (checkZone(child.argnum(), ranges[child.name])) {
+        switch (checkZone(i.argnum(), ranges[i.name])) {
         case zoneType::HG:
-            task.root.assign(child.root.begin() + ranges[child.name].second, child.root.end());
-            child.root.erase(child.root.begin() + ranges[child.name].second, child.root.end());
+            task.root.assign(i.root.begin() + ranges[i.name].second, i.root.end());
+            i.root.erase(i.root.begin() + ranges[i.name].second, i.root.end());
             break;
         case zoneType::LW:
-            throw labeled_error(child.name.fname(), 3);
+            throw p_invalid_argument(i.name.fname(), 3);
             break;
         }
     }

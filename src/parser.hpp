@@ -4,12 +4,6 @@
 #include "tasks.hpp"
 
 namespace keyparser {
-	class labeled_error : public std::invalid_argument {
-	public:
-		int label;
-		labeled_error(std::string msg, int label) : std::invalid_argument(msg), label(label) {}
-	};
-
 	class Parser {
 	private:
 		std::map<Key, Parser*> parsers;
@@ -23,6 +17,12 @@ namespace keyparser {
 		int static checkZone(unsigned number, std::pair<int, int> zone);
 
 		void upgradeTasks(Task& tasks);
+
+		class p_invalid_argument : public std::invalid_argument {
+		public:
+			int label;
+			p_invalid_argument(std::string msg, int label) : std::invalid_argument(msg), label(label) {}
+		};
 
 	public:
 		Parser(int f_num, int s_num);

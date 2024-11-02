@@ -2,9 +2,13 @@ SRC = src/
 LIB_SRC = ../src/
 DST = out/
 
-all: $(DST)key.o $(DST)tasks.o $(DST)parser.o
-	g++ $(SRC)main.cpp $(DST)key.o $(DST)tasks.o $(DST)parser.o -o $(DST)libtest
+# Add test goal there
+all: $(DST)test_task_1
 
+$(DST)test_task_1: $(SRC)test_task_1.cpp $(DST)key.o $(DST)tasks.o $(DST)parser.o
+	g++ $(SRC)test_task_1.cpp $(DST)key.o $(DST)tasks.o $(DST)parser.o -o $(DST)test_task_1
+
+# Don't change code below
 $(DST)key.o: $(LIB_SRC)key.cpp $(LIB_SRC)key.hpp
 	mkdir -p $(DST)
 	g++ -c $(LIB_SRC)key.cpp -o $(DST)key.o

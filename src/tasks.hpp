@@ -4,23 +4,21 @@
 #include <map>
 
 namespace keyparser {
-	typedef std::vector<std::pair<Key, Task>> TaskTree;
-
 	class Task {
 	public:
-		TaskTree childs;
+		std::vector<Task> childs;
 		Key name;
 		Args root;
 
-		Task();
-		Task(Args args, TaskTree tasks = {});
+		Task(const Key& key = Key::getRoot());
 
 		void addKey(const Key& key);
-		bool popKey();
+		bool popKey(const Key& key = Key::getRoot());
 
 		void addArg(const std::string& arg);
-		bool popArg();
+		bool popArg(int size = 1, bool front = false);
 
-		int argnum();
+		int keynum() const;
+		int argnum() const;
 	};
 }

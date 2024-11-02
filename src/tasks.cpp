@@ -1,31 +1,28 @@
 #include "tasks.hpp"
 
 /// @brief Create root empty task
-keyparser::Task::Task() : name(Key::getRoot()) {}
-
-/// @brief Create root task
-/// @param args Root parameters [vector<string>]
-/// @param tasks Child tasks [vector<pair<Key, Task>>]
-keyparser::Task::Task(Args args, TaskTree tasks) : name(Key::getRoot()), root(args) {
-    for (int i = 0; i < tasks.size(); i++) {
-        childs.push_back({tasks[i].first, Task(tasks[i].second.root, tasks[i].second.childs)});
-        childs.back().second.name = tasks[i].first;
-    }
-}
+keyparser::Task::Task(const Key& key) : name(key) {}
 
 /// @brief Add new child task from key
 /// @param key Key [Key]
 void keyparser::Task::addKey(const Key& key) {
-    childs.push_back({key, Task()});
-    childs.back().second.name = key;
+    childs.push_back(Task(key));
 }
 
-/// @brief Remove last child task
-/// @return False if there was no child tasks [bool]
-bool keyparser::Task::popKey() {
+/// @brief Remove child task (last by default)
+/// @param key Key to remove [Key] (optionaly)
+/// @return False if there was no specific child task [bool]
+bool keyparser::Task::popKey(const Key& key) {
     if (childs.empty()) return false;
-    childs.pop_back();
-    return true;
+    if (key == Key::getRoot()) {
+        childs.pop_back();
+        return true;
+    }
+    for (auto i = childs.begin(); i != childs.end(); i++) if (i->name ^= key) {
+        childs.erase(i);
+        return true;
+    }
+    return false;
 }
 
 /// @brief Add parameter at root parameters
@@ -34,15 +31,26 @@ void keyparser::Task::addArg(const std::string& arg) {
     root.push_back(arg);
 }
 
-/// @brief Remove last root parameter
+/// @brief Remove root parameters from back
+/// @param size Number of parameters to remove [int] (optionaly)
+/// @param front Remove root parameters from front [bool] (optionaly)
 /// @return False if there was no parameters [bool]
-bool keyparser::Task::popArg() {
+bool keyparser::Task::popArg(int size, bool front) {
     if (root.empty()) return false;
-    root.pop_back();
+    if (size >= root.size()) root.clear();
+    else {
+        if (front) root.erase(root.begin(), root.begin() + size);
+        else root.erase(root.end() - size, root.end());
+    }
     return true;
 }
 
+/// @brief Return number of child keys
+int keyparser::Task::keynum() const {
+    return childs.size();
+}
+
 /// @brief Return number of root parameters
-int keyparser::Task::argnum() {
+int keyparser::Task::argnum() const {
     return root.size();
 }
