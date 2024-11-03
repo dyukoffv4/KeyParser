@@ -27,6 +27,7 @@ function Build {
     cp src/key.hpp $PKG_INC
     cp src/parser.hpp $PKG_INC
     cp src/tasks.hpp $PKG_INC
+    cp src/binds.hpp $PKG_INC
 
     for i in $(objdump -p $LIBRARY | awk '/NEEDED/{print $2}'); do
         STRING=$(dpkg -S "$i" | awk '{print $1}' | head -1)
