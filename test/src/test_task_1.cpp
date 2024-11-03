@@ -1,4 +1,5 @@
 #include "../../src/parser.hpp"
+#include <iostream>
 
 using namespace keyparser;
 using namespace std;
