@@ -2,16 +2,28 @@ SRC = src/
 LIB_SRC = ../src/
 DST = out/
 
-all: $(DST)key.o $(DST)terminal.o
-	g++ $(SRC)main.cpp $(DST)key.o $(DST)terminal.o -o $(DST)libtest
+# Add test goal there
+all: $(DST)test_task_1
 
+$(DST)test_task_1: $(SRC)test_task_1.cpp $(DST)key.o $(DST)tasks.o $(DST)parser.o $(DST)binds.o
+	g++ $(SRC)test_task_1.cpp $(DST)key.o $(DST)tasks.o $(DST)parser.o $(DST)binds.o -o $(DST)test_task_1
+
+# Don't change code below
 $(DST)key.o: $(LIB_SRC)key.cpp $(LIB_SRC)key.hpp
 	mkdir -p $(DST)
 	g++ -c $(LIB_SRC)key.cpp -o $(DST)key.o
 
-$(DST)terminal.o: $(LIB_SRC)terminal.cpp $(LIB_SRC)terminal.hpp
+$(DST)tasks.o: $(LIB_SRC)tasks.cpp $(LIB_SRC)tasks.hpp
 	mkdir -p $(DST)
-	g++ -c $(LIB_SRC)terminal.cpp -o $(DST)terminal.o
+	g++ -c $(LIB_SRC)tasks.cpp -o $(DST)tasks.o
+
+$(DST)parser.o: $(LIB_SRC)parser.cpp $(LIB_SRC)parser.hpp
+	mkdir -p $(DST)
+	g++ -c $(LIB_SRC)parser.cpp -o $(DST)parser.o
+
+$(DST)binds.o: $(LIB_SRC)binds.cpp $(LIB_SRC)binds.hpp
+	mkdir -p $(DST)
+	g++ -c $(LIB_SRC)binds.cpp -o $(DST)binds.o
 
 clean:
 	rm -rf $(DST)*.o

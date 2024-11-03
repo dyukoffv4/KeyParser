@@ -1,12 +1,16 @@
 #pragma once
 
+#include <map>
 #include <string>
 #include <vector>
 #include <exception>
 #include <stdexcept>
 
-namespace KP {
-    typedef std::vector<std::string> Args;
+namespace keyparser {
     class Key;
-    class Terminal;
+    class Parser;
+    class Task;
+    class Binds;
+
+    typedef std::vector<std::string> Args;
 }
