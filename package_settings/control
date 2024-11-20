@@ -1,0 +1,8 @@
+Package: lkeyparser
+Version: 1.0.0
+Section: unknown
+Priority: optional
+Architecture: amd64
+Essential: no
+Maintainer: dyukoffv4 <net998art@gmail.com>
+Description: Light Key Parsing DL for C++ applications

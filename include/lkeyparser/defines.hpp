@@ -10,7 +10,6 @@ namespace keyparser {
     class Key;
     class Parser;
     class Task;
-    class Binds;
 
     typedef std::vector<std::string> Args;
 }
