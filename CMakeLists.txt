@@ -3,4 +3,4 @@ project(Keyparser VERSION 1.0.0 LANGUAGES C CXX)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-add_library(lkeyparser SHARED src/parser.cpp src/tasks.cpp src/key.cpp)
+add_library(keyparser SHARED src/parser.cpp src/tasks.cpp src/key.cpp)

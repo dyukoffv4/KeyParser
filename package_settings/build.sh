@@ -1,13 +1,13 @@
 #!/usr/bin/bash
-PACKAGE_PATH=build/lkeyparser
-INCLUDE_PATH=include/lkeyparser
-LIB_FILEPATH=build/cmake/liblkeyparser.so
+PACKAGE_PATH=build/keyparser
+INCLUDE_PATH=include/keyparser
+LIB_FILEPATH=build/cmake/libkeyparser.so
 
 cd $(dirname $(realpath $0))/..
 
 if [[ ! -e $LIB_FILEPATH ]]
 then
-    echo "Shared library 'liblkeyparser.so' does not exist!"
+    echo "Shared library '${LIB_FILEPATH}' does not exist!"
     exit 1
 fi
 

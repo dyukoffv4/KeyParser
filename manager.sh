@@ -19,7 +19,7 @@ function Build {
 function Clean {
     if [[ $COMMAND_2 == "all" ]]; then rm -rf build; fi
     if [[ $COMMAND_2 == "cmake" ]]; then rm -rf build/cmake; fi
-    if [[ $COMMAND_2 == "build" ]]; then rm -rf build/lkeyparser; fi
+    if [[ $COMMAND_2 == "build" ]]; then rm -rf build/keyparser; fi
 }
 
 cd $CURRENT_PATH
