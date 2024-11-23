@@ -45,6 +45,7 @@ bool keyparser::Key::operator!=(const Key& key) const {
 /// @param key Key [Key]
 bool keyparser::Key::operator^=(const Key& key) const {
     if (key.full() && full()) return s_data == key.s_data && l_data == key.l_data;
+    if (!key.full() && !full()) return s_data == key.s_data && l_data == key.l_data;
     return s_data == key.s_data || l_data == key.l_data;
 }
 
