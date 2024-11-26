@@ -1,16 +1,11 @@
 #include "include/keyparser/parser.hpp"
 
-/// @brief Create Parser with partially limited number of root parameters
-/// @param f_num Lower limit of parameters [int]
-/// @param s_num Upper limit of parameters [int]
 keyparser::Parser::Parser(unsigned f_num, unsigned s_num) {
     if (f_num > s_num) throw std::invalid_argument("# Parser.Parser: First num can't be bigger then second!");
     range_0 = f_num;
     range_1 = s_num;
 }
 
-/// @brief Create Parser with fixed number of root parameters
-/// @param f_num Number of parameters [int]
 keyparser::Parser::Parser(unsigned num) {
     range_0 = num;
     range_1 = num;
@@ -29,10 +24,6 @@ keyparser::Parser &keyparser::Parser::operator=(const Parser &parser) {
     return *this;
 }
 
-/// @brief Add key with partially limited number of parameters
-/// @param key Key [Key&]
-/// @param f_num Lower limit of parameters [int]
-/// @param s_num Upper limit of parameters [int]
 keyparser::Parser* keyparser::Parser::addKey(const Key& key, unsigned f_num, unsigned s_num, bool force) {
     if (f_num > s_num) throw std::invalid_argument("# Parser.addKey: First num can't be bigger then second!");
     if (force) delKey(key, false);
@@ -40,9 +31,6 @@ keyparser::Parser* keyparser::Parser::addKey(const Key& key, unsigned f_num, uns
     return &(parsers[key] = Parser(f_num, s_num));
 }
 
-/// @brief Add key with fixed number of parameters
-/// @param key Key [Key&]
-/// @param f_num Number of parameters [int]
 keyparser::Parser* keyparser::Parser::addKey(const Key& key, unsigned num, bool force) {
     if (force) delKey(key, false);
     else if (getKey(key, false)) return nullptr;
@@ -63,8 +51,6 @@ keyparser::Parser* keyparser::Parser::getKey(const Key& key, bool exact) {
     return nullptr;
 }
 
-/// @brief Delete a full key from storage
-/// @param key Variant of a key to delete [Key&]
 void keyparser::Parser::delKey(const Key& key, bool exact) {
     if (exact) {
         if (parsers.count(key)) parsers.erase(key);
@@ -77,35 +63,23 @@ void keyparser::Parser::delKey(const Key& key, bool exact) {
     }
 }
 
-/// @brief Set limited number of root parameters
-/// @param f_num Lower limit of parameters [int]
-/// @param s_num Upper limit of parameters [int]
 void keyparser::Parser::setRange(unsigned f_num, unsigned s_num) {
     if (f_num > s_num && s_num > -1) throw std::invalid_argument("# Parser.setRange: First num can't be bigger then second!");
     range_0 = f_num;
     range_1 = s_num;
 }
 
-/// @brief Set fixed of root parameters
-/// @param f_num Number of parameters [int]
 void keyparser::Parser::setRange(unsigned f_num) {
     range_0 = f_num;
     range_1 = f_num;
 }
 
-/// @brief Parses keys and arguments according to the specified settings
-/// @param argc Number of arguments [int]
-/// @param argv Array of arguments [char**]
-/// @return Object with structured keys and parametrs for each key [Task]
 keyparser::Task keyparser::Parser::parse(int argc, char* argv[]) {
     Args input;
 	for (int i = 1; i < argc; i++) input.push_back(argv[i]);
     return parse(input);
 }
 
-/// @brief Parses keys and arguments according to the specified settings
-/// @param input List of arguments to parse [vector<string>]
-/// @return Object with structured keys and parametrs for each key [Task]
 keyparser::Task keyparser::Parser::parse(const Args& input) {
     Task result = dumbParse(input);
     try { upgradeTasks(result); }
@@ -122,9 +96,6 @@ keyparser::Task keyparser::Parser::parse(const Args& input) {
     return result;
 }
 
-/// @brief Parses keys and arguments according to base syntax
-/// @param input List of arguments to parse [vector<string>]
-/// @return Object with structured keys and parametrs for each key [Task]
 keyparser::Task keyparser::Parser::dumbParse(const Args& input) {
     Task tasks;
     std::vector<Task*> task_stack = {&tasks};

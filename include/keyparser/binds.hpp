@@ -12,17 +12,38 @@ namespace keyparser {
         std::map<Key, Binds> after_root_keys;
 
     public:
+        /// @brief Create binds with root handler
+        /// @param root_bind Handler [void(*)(const Args&)]
         Binds(void(*root_bind)(const Args& args) = nullptr);
 
-        void bind(Key key, const Binds& _bind, bool call_first = false);
-        void bind(void(*_bind)(const Args& args));
+        /// @brief Add key bind
+        /// @param key Key [Key&]
+        /// @param new_bind Handler [void(*)(const Args&)]
+        /// @param call_first 
+        void bind(const Key& key, const Binds& new_bind, bool call_first = false);
 
-        void unbind(Key key);
+        /// @brief Add root key bind
+        /// @param new_bind Handler [void(*)(const Args&)]
+        void bind(void(*new_bind)(const Args& args));
+
+        /// @brief Delete key bind
+        /// @param key Key [Key&]
+        void unbind(const Key& key);
+
+        /// @brief Delete root key bind
         void unbind();
 
+        /// @brief Set function, running before handling keys
+        /// @param function Function [void(*)()]
         void before_all(void(*function)());
+
+        /// @brief Set function, running after handling keys
+        /// @param function Function [void(*)()]
         void after_all(void(*function)());
 
+        /// @brief Run handling over tasks
+        /// @param task Task to handle [Task&]
+        /// @param full_key_match Matching parameter [bool]
         void execute(const Task& task, bool full_key_match = false);
     };
 }

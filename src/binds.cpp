@@ -5,22 +5,22 @@ keyparser::Binds::Binds(void(*root_bind)(const Args& args)) : root_bind(root_bin
     after = nullptr;
 }
 
-void keyparser::Binds::bind(Key key, const Binds& _bind, bool call_first) {
+void keyparser::Binds::bind(const Key& key, const Binds& new_bind, bool call_first) {
     if (call_first) {
         if (after_root_keys.count(key)) after_root_keys.erase(key);
-        before_root_keys[key] = _bind;
+        before_root_keys[key] = new_bind;
     }
     else {
         if (before_root_keys.count(key)) before_root_keys.erase(key);
-        after_root_keys[key] = _bind;
+        after_root_keys[key] = new_bind;
     }
 }
 
-void keyparser::Binds::bind(void(*_bind)(const Args& args)) {
-    root_bind = _bind;
+void keyparser::Binds::bind(void(*new_bind)(const Args& args)) {
+    root_bind = new_bind;
 }
 
-void keyparser::Binds::unbind(Key key) {
+void keyparser::Binds::unbind(const Key& key) {
     if (after_root_keys.count(key)) after_root_keys.erase(key);
     if (before_root_keys.count(key)) before_root_keys.erase(key);
 }
