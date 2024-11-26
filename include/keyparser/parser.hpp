@@ -3,11 +3,16 @@
 #include "tasks.hpp"
 
 namespace keyparser {
+	class trace_argument_error : public std::invalid_argument {
+	public:
+		int label;
+		trace_argument_error(std::string msg, int label) : std::invalid_argument(msg), label(label) {}
+	};
+
 	class Parser {
 	private:
-		std::map<Key, Parser*> parsers;
-		std::map<Key, std::pair<int, int>> ranges;
-		std::map<Key, Key> fullkeys;
+		std::map<Key, Parser> parsers;
+		std::pair<int, int> range;
 		
 		enum argType{ARG, SKEY, LKEY};
 		std::pair<int, int> static checkArg(const std::string& arg);
@@ -17,25 +22,19 @@ namespace keyparser {
 
 		void upgradeTasks(Task& tasks);
 
-		class p_invalid_argument : public std::invalid_argument {
-		public:
-			int label;
-			p_invalid_argument(std::string msg, int label) : std::invalid_argument(msg), label(label) {}
-		};
-
 	public:
 		Parser(int f_num, int s_num);
 		Parser(int f_num = -1);
 
 		Parser& operator=(const Parser& parser);
 
-		void addKey(const Key& data, int f_num, int s_num);
-		void addKey(const Key& data, int f_num);
-		void addKey(const Key& data, Parser* parser = nullptr);
+		Parser& addKey(const Key& data, int f_num, int s_num);
+		Parser& addKey(const Key& data, int f_num = -1);
+		
 		void delKey(const Key& data);
 
-		void setArgnum(int f_num, int s_num);
-		void setArgnum(int f_num);
+		void setRange(int f_num, int s_num);
+		void setRange(int f_num);
 
 		Task parse(int argc, char* argv[]);
 		Task parse(Args input);
