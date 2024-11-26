@@ -33,37 +33,47 @@ keyparser::Parser &keyparser::Parser::operator=(const Parser &parser) {
 /// @param key Key [Key&]
 /// @param f_num Lower limit of parameters [int]
 /// @param s_num Upper limit of parameters [int]
-keyparser::Parser& keyparser::Parser::addKey(const Key& key, unsigned f_num, unsigned s_num) {
+keyparser::Parser* keyparser::Parser::addKey(const Key& key, unsigned f_num, unsigned s_num, bool force) {
     if (f_num > s_num) throw std::invalid_argument("# Parser.addKey: First num can't be bigger then second!");
-    delKey(key);
-    return parsers[key] = Parser(f_num, s_num);
+    if (force) delKey(key, false);
+    else if (getKey(key, false)) return nullptr;
+    return &(parsers[key] = Parser(f_num, s_num));
 }
 
 /// @brief Add key with fixed number of parameters
 /// @param key Key [Key&]
 /// @param f_num Number of parameters [int]
-keyparser::Parser& keyparser::Parser::addKey(const Key& key, unsigned num) {
-    delKey(key);
-    return parsers[key] = Parser(num);
+keyparser::Parser* keyparser::Parser::addKey(const Key& key, unsigned num, bool force) {
+    if (force) delKey(key, false);
+    else if (getKey(key, false)) return nullptr;
+    return &(parsers[key] = Parser(num));
 }
 
-keyparser::Parser& keyparser::Parser::addKey(const Key& key) {
-    delKey(key);
-    return parsers[key] = Parser();
+keyparser::Parser* keyparser::Parser::addKey(const Key& key, bool force) {
+    if (force) delKey(key, false);
+    else if (getKey(key, false)) return nullptr;
+    return &(parsers[key] = Parser());
 }
 
-keyparser::Parser& keyparser::Parser::getKey(const Key& key) {
-    for (auto i = parsers.begin(); i != parsers.end();) {
-        if (i->first ^= key) return i->second;
+keyparser::Parser* keyparser::Parser::getKey(const Key& key, bool exact) {
+    if (exact) return parsers.count(key) ? &parsers[key] : nullptr;
+    for (auto i = parsers.begin(); i != parsers.end(); i++) {
+        if (i->first ^= key) return &(i->second);
     }
+    return nullptr;
 }
 
 /// @brief Delete a full key from storage
 /// @param key Variant of a key to delete [Key&]
-void keyparser::Parser::delKey(const Key& key) {
-    for (auto i = parsers.begin(); i != parsers.end();) {
-        if (i->first ^= key) i = parsers.erase(i);
-        else i++;
+void keyparser::Parser::delKey(const Key& key, bool exact) {
+    if (exact) {
+        if (parsers.count(key)) parsers.erase(key);
+    }
+    else {
+        for (auto i = parsers.begin(); i != parsers.end();) {
+            if (i->first ^= key) i = parsers.erase(i);
+            else i++;
+        }
     }
 }
 

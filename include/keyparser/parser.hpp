@@ -26,13 +26,13 @@ namespace keyparser {
 
 		Parser& operator=(const Parser& parser);
 
-		Parser& addKey(const Key& data, unsigned f_num, unsigned s_num);
-		Parser& addKey(const Key& data, unsigned num);
-		Parser& addKey(const Key& data);
+		Parser* addKey(const Key& data, unsigned f_num, unsigned s_num, bool force = false);
+		Parser* addKey(const Key& data, unsigned num, bool force = false);
+		Parser* addKey(const Key& data, bool force = false);
 		
-		Parser& getKey(const Key& data);
+		Parser* getKey(const Key& data, bool exact = true);
 
-		void delKey(const Key& data);
+		void delKey(const Key& data, bool exact = true);
 
 		void setRange(unsigned f_num, unsigned s_num);
 		void setRange(unsigned num);
