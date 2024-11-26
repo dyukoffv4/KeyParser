@@ -1,4 +1,4 @@
-#include "keyparser/key.hpp"
+#include "include/keyparser/key.hpp"
 
 /// @brief Create short key
 /// @param s_data Short name [char]
@@ -44,8 +44,7 @@ bool keyparser::Key::operator!=(const Key& key) const {
 /// @brief Check if keys are partially equal
 /// @param key Key [Key]
 bool keyparser::Key::operator^=(const Key& key) const {
-    if (key.full() && full()) return s_data == key.s_data && l_data == key.l_data;
-    if (!key.full() && !full()) return s_data == key.s_data && l_data == key.l_data;
+    if (!(key.full() || full())) return s_data == key.s_data && l_data == key.l_data;
     return s_data == key.s_data || l_data == key.l_data;
 }
 

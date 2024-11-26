@@ -1,12 +1,11 @@
-#include "keyparser/parser.hpp"
+#include "include/keyparser/parser.hpp"
 
 /// @brief Create Parser with partially limited number of root parameters
 /// @param f_num Lower limit of parameters [int]
 /// @param s_num Upper limit of parameters [int]
 keyparser::Parser::Parser(int f_num, int s_num) {
     if (f_num > s_num && s_num > -1) throw std::invalid_argument("# Parser.Parser: First num can't be bigger then second!");
-    parsers[Key::getRoot()] = nullptr;
-    ranges[Key::getRoot()] = {f_num, s_num};
+    range = {f_num, s_num};
 }
 
 /// @brief Create Parser with fixed number of root parameters
@@ -15,11 +14,8 @@ keyparser::Parser::Parser(int f_num) : Parser(f_num, f_num) {}
 
 keyparser::Parser &keyparser::Parser::operator=(const Parser &parser) {
     parsers.clear();
-    ranges.clear();
-    fullkeys.clear();
     for (auto &i : parser.parsers) parsers[i.first] = i.second;
-    for (auto &i : parser.ranges) ranges[i.first] = i.second;
-    for (auto &i : parser.fullkeys) fullkeys.insert({i.first, i.second});
+    range = parser.range;
     return *this;
 }
 
@@ -27,81 +23,40 @@ keyparser::Parser &keyparser::Parser::operator=(const Parser &parser) {
 /// @param key Key [Key&]
 /// @param f_num Lower limit of parameters [int]
 /// @param s_num Upper limit of parameters [int]
-void keyparser::Parser::addKey(const Key& key, int f_num, int s_num) {
+keyparser::Parser& keyparser::Parser::addKey(const Key& key, int f_num, int s_num) {
     if (f_num > s_num && s_num > -1) throw std::invalid_argument("# Parser.addKey: First num can't be bigger then second!");
     delKey(key);
-    if (key.full()) {
-        parsers[Key(key.sname())] = nullptr;
-        parsers[Key(key.lname())] = nullptr;
-        ranges[Key(key.sname())] = {f_num, s_num};
-        ranges[Key(key.lname())] = {f_num, s_num};
-        fullkeys.insert({Key(key.sname()), key});
-        fullkeys.insert({Key(key.lname()), key});
-    }
-    else {
-        parsers[key] = nullptr;
-        ranges[key] = {f_num, s_num};
-        fullkeys.insert({key, key});
-    }
+    return parsers[key] = Parser(f_num, s_num);
 }
 
 /// @brief Add key with fixed number of parameters
 /// @param key Key [Key&]
 /// @param f_num Number of parameters [int]
-void keyparser::Parser::addKey(const Key& key, int f_num) {
-    addKey(key, f_num, f_num);
-}
-
-/// @brief Add key with own subkeys
-/// @param key Key [Key&]
-/// @param parser Another parser with setted up keys [Parser*]
-void keyparser::Parser::addKey(const Key& key, Parser* parser) {
-    addKey(key, -1, -1);
-    if (key.full()) {
-        parsers[Key(key.sname())] = parser;
-        parsers[Key(key.lname())] = parser;
-    }
-    else parsers[key] = parser;
+keyparser::Parser& keyparser::Parser::addKey(const Key& key, int f_num) {
+    return addKey(key, f_num, f_num);
 }
 
 /// @brief Delete a full key from storage
 /// @param key Variant of a key to delete [Key&]
 void keyparser::Parser::delKey(const Key& key) {
-    Key fkey = key;
-    if (!fkey.full()) {
-        if (fullkeys.count(fkey)) fkey = fullkeys.find(fkey)->second;
-        else return;
-    }
-
-    if (fkey.full()) {
-        if (fullkeys.count(Key(fkey.sname())) && fullkeys.count(Key(fkey.lname()))) {
-            parsers.erase(parsers.find(Key(fkey.lname())));
-            parsers.erase(parsers.find(Key(fkey.sname())));
-            ranges.erase(ranges.find(Key(fkey.lname())));
-            ranges.erase(ranges.find(Key(fkey.sname())));
-            fullkeys.erase(fullkeys.find(Key(fkey.lname())));
-            fullkeys.erase(fullkeys.find(Key(fkey.sname())));
-        }
-    }
-    else {
-        parsers.erase(parsers.find(fkey));
-        ranges.erase(ranges.find(fkey));
-        fullkeys.erase(fullkeys.find(fkey));
+    for (auto i = parsers.begin(); i != parsers.end();) {
+        if (i->first ^= key) i = parsers.erase(i);
+        else i++;
     }
 }
 
 /// @brief Set limited number of root parameters
 /// @param f_num Lower limit of parameters [int]
 /// @param s_num Upper limit of parameters [int]
-void keyparser::Parser::setArgnum(int f_num, int s_num) {
-    if (f_num > s_num && s_num > -1) throw std::invalid_argument("# Parser.setArgnum: First num can't be bigger then second!");
-    ranges[Key::getRoot()] = {f_num, s_num};
+void keyparser::Parser::setRange(int f_num, int s_num) {
+    if (f_num > s_num && s_num > -1) throw std::invalid_argument("# Parser.setRange: First num can't be bigger then second!");
+    range = {f_num, s_num};
 }
 
 /// @brief Set fixed of root parameters
 /// @param f_num Number of parameters [int]
-void keyparser::Parser::setArgnum(int f_num) {
-    ranges[Key::getRoot()] = {f_num, f_num};
+void keyparser::Parser::setRange(int f_num) {
+    range = {f_num, f_num};
 }
 
 /// @brief Parses keys and arguments according to the specified settings
@@ -120,29 +75,19 @@ keyparser::Task keyparser::Parser::parse(int argc, char* argv[]) {
 keyparser::Task keyparser::Parser::parse(Args input) {
     Task result = dumbParse(input);
     try { upgradeTasks(result); }
-    catch (p_invalid_argument e) {
+    catch (trace_argument_error e) {
         switch (e.label) {
         case 1:
             throw std::invalid_argument("# Parser.parse: Key " + std::string(e.what()) + " doesn't exist!\n");
-            break;
         case 2:
-            throw std::invalid_argument("# Parser.parse: Key " + std::string(e.what()) + " hasn't nested keys!\n");
-            break;
-        case 3:
             throw std::invalid_argument("# Parser.parse: Key " + std::string(e.what()) + " received few parameters!\n");
-            break;
-        default:
-            throw e;
-            break;
         }
     }
-    switch (checkZone(result.argnum(), ranges[result.name])) {
-        case zoneType::HG:
-            throw std::invalid_argument("# Parser.parse: Received much parameters!\n");
-            break;
-        case zoneType::LW:
-            throw std::invalid_argument("# Parser.parse: Received few parameters!\n");
-            break;
+    switch (checkZone(result.argnum(), range)) {
+    case zoneType::HG:
+        throw std::invalid_argument("# Parser.parse: Received much parameters!\n");
+    case zoneType::LW:
+        throw std::invalid_argument("# Parser.parse: Received few parameters!\n");
     }
     return result;
 }
@@ -194,25 +139,26 @@ int keyparser::Parser::checkZone(unsigned number, std::pair<int, int> zone) {
 
 void keyparser::Parser::upgradeTasks(Task& task) {
     for (auto &i : task.childs) {
-        if (!parsers.count(i.name)) throw p_invalid_argument(i.name.fname(), 1);
-        if (parsers[i.name]) {
-            try {
-                parsers[i.name]->upgradeTasks(i);
-            }
-            catch (p_invalid_argument e) {
-                throw p_invalid_argument(i.name.fname() + " -> " + e.what(), e.label);
+        bool child_not_exist = true;
+        for (auto &j : parsers) {
+            if (i.name ^= j.first) {
+                i.name = j.first;
+                try { j.second.upgradeTasks(i); }
+                catch (trace_argument_error e) {
+                    throw trace_argument_error(i.name.fname() + " -> " + e.what(), e.label);
+                }
+                switch (checkZone(i.argnum(), j.second.range)) {
+                case zoneType::HG:
+                    task.root.insert(task.root.end(), i.root.begin() + j.second.range.second, i.root.end());
+                    i.root.erase(i.root.begin() + j.second.range.second, i.root.end());
+                    break;
+                case zoneType::LW:
+                    throw trace_argument_error(i.name.fname(), 2);
+                }
+                child_not_exist = false;
+                break;
             }
         }
-        else if (!i.childs.empty()) throw p_invalid_argument(i.name.fname(), 2);
-
-        switch (checkZone(i.argnum(), ranges[i.name])) {
-        case zoneType::HG:
-            task.root.assign(i.root.begin() + ranges[i.name].second, i.root.end());
-            i.root.erase(i.root.begin() + ranges[i.name].second, i.root.end());
-            break;
-        case zoneType::LW:
-            throw p_invalid_argument(i.name.fname(), 3);
-            break;
-        }
+        if (child_not_exist) throw trace_argument_error(i.name.fname(), 1);
     }
 }
