@@ -13,4 +13,6 @@ namespace keyparser {
     class Binds;
 
     typedef std::vector<std::string> Args;
+    
+	const unsigned uint_max = 0xFFFFFFFF;
 }

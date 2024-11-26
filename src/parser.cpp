@@ -3,19 +3,29 @@
 /// @brief Create Parser with partially limited number of root parameters
 /// @param f_num Lower limit of parameters [int]
 /// @param s_num Upper limit of parameters [int]
-keyparser::Parser::Parser(int f_num, int s_num) {
-    if (f_num > s_num && s_num > -1) throw std::invalid_argument("# Parser.Parser: First num can't be bigger then second!");
-    range = {f_num, s_num};
+keyparser::Parser::Parser(unsigned f_num, unsigned s_num) {
+    if (f_num > s_num) throw std::invalid_argument("# Parser.Parser: First num can't be bigger then second!");
+    range_0 = f_num;
+    range_1 = s_num;
 }
 
 /// @brief Create Parser with fixed number of root parameters
 /// @param f_num Number of parameters [int]
-keyparser::Parser::Parser(int f_num) : Parser(f_num, f_num) {}
+keyparser::Parser::Parser(unsigned num) {
+    range_0 = num;
+    range_1 = num;
+}
+
+keyparser::Parser::Parser() {
+    range_0 = 0;
+    range_1 = uint_max;
+}
 
 keyparser::Parser &keyparser::Parser::operator=(const Parser &parser) {
     parsers.clear();
     for (auto &i : parser.parsers) parsers[i.first] = i.second;
-    range = parser.range;
+    range_0 = parser.range_0;
+    range_1 = parser.range_1;
     return *this;
 }
 
@@ -23,8 +33,8 @@ keyparser::Parser &keyparser::Parser::operator=(const Parser &parser) {
 /// @param key Key [Key&]
 /// @param f_num Lower limit of parameters [int]
 /// @param s_num Upper limit of parameters [int]
-keyparser::Parser& keyparser::Parser::addKey(const Key& key, int f_num, int s_num) {
-    if (f_num > s_num && s_num > -1) throw std::invalid_argument("# Parser.addKey: First num can't be bigger then second!");
+keyparser::Parser& keyparser::Parser::addKey(const Key& key, unsigned f_num, unsigned s_num) {
+    if (f_num > s_num) throw std::invalid_argument("# Parser.addKey: First num can't be bigger then second!");
     delKey(key);
     return parsers[key] = Parser(f_num, s_num);
 }
@@ -32,8 +42,20 @@ keyparser::Parser& keyparser::Parser::addKey(const Key& key, int f_num, int s_nu
 /// @brief Add key with fixed number of parameters
 /// @param key Key [Key&]
 /// @param f_num Number of parameters [int]
-keyparser::Parser& keyparser::Parser::addKey(const Key& key, int f_num) {
-    return addKey(key, f_num, f_num);
+keyparser::Parser& keyparser::Parser::addKey(const Key& key, unsigned num) {
+    delKey(key);
+    return parsers[key] = Parser(num);
+}
+
+keyparser::Parser& keyparser::Parser::addKey(const Key& key) {
+    delKey(key);
+    return parsers[key] = Parser();
+}
+
+keyparser::Parser& keyparser::Parser::getKey(const Key& key) {
+    for (auto i = parsers.begin(); i != parsers.end();) {
+        if (i->first ^= key) return i->second;
+    }
 }
 
 /// @brief Delete a full key from storage
@@ -48,15 +70,17 @@ void keyparser::Parser::delKey(const Key& key) {
 /// @brief Set limited number of root parameters
 /// @param f_num Lower limit of parameters [int]
 /// @param s_num Upper limit of parameters [int]
-void keyparser::Parser::setRange(int f_num, int s_num) {
+void keyparser::Parser::setRange(unsigned f_num, unsigned s_num) {
     if (f_num > s_num && s_num > -1) throw std::invalid_argument("# Parser.setRange: First num can't be bigger then second!");
-    range = {f_num, s_num};
+    range_0 = f_num;
+    range_1 = s_num;
 }
 
 /// @brief Set fixed of root parameters
 /// @param f_num Number of parameters [int]
-void keyparser::Parser::setRange(int f_num) {
-    range = {f_num, f_num};
+void keyparser::Parser::setRange(unsigned f_num) {
+    range_0 = f_num;
+    range_1 = f_num;
 }
 
 /// @brief Parses keys and arguments according to the specified settings
@@ -72,7 +96,7 @@ keyparser::Task keyparser::Parser::parse(int argc, char* argv[]) {
 /// @brief Parses keys and arguments according to the specified settings
 /// @param input List of arguments to parse [vector<string>]
 /// @return Object with structured keys and parametrs for each key [Task]
-keyparser::Task keyparser::Parser::parse(Args input) {
+keyparser::Task keyparser::Parser::parse(const Args& input) {
     Task result = dumbParse(input);
     try { upgradeTasks(result); }
     catch (trace_argument_error e) {
@@ -83,12 +107,8 @@ keyparser::Task keyparser::Parser::parse(Args input) {
             throw std::invalid_argument("# Parser.parse: Key " + std::string(e.what()) + " received few parameters!\n");
         }
     }
-    switch (checkZone(result.argnum(), range)) {
-    case zoneType::HG:
-        throw std::invalid_argument("# Parser.parse: Received much parameters!\n");
-    case zoneType::LW:
-        throw std::invalid_argument("# Parser.parse: Received few parameters!\n");
-    }
+    if (range_0 > result.argnum()) throw std::invalid_argument("# Parser.parse: Received few parameters!\n");
+    if (range_1 < result.argnum()) throw std::invalid_argument("# Parser.parse: Received much parameters!\n");
     return result;
 }
 
@@ -115,6 +135,8 @@ keyparser::Task keyparser::Parser::dumbParse(const Args& input) {
     return tasks;
 }
 
+// private methods
+
 std::pair<int, int> keyparser::Parser::checkArg(const std::string& arg) {
     if (arg.empty()) throw std::invalid_argument("# Parser.checkArg: Empty argument were got!\n");
     
@@ -130,30 +152,22 @@ std::pair<int, int> keyparser::Parser::checkArg(const std::string& arg) {
     throw std::invalid_argument("# Parser.checkArg: Invalid key format!\n");
 }
 
-int keyparser::Parser::checkZone(unsigned number, std::pair<int, int> zone) {
-    if (zone.second < 0) return (zone.first < 0 || zone.first <= number) ? zoneType::IN : zoneType::LW;
-    if (zone.first < 0) return (zone.second < 0 || zone.second >= number) ? zoneType::IN : zoneType::HG;
-    if (zone.first <= number && zone.second >= number) return zoneType::IN;
-    return zone.first > number ? zoneType::LW : zoneType::HG;
-}
-
 void keyparser::Parser::upgradeTasks(Task& task) {
     for (auto &i : task.childs) {
         bool child_not_exist = true;
         for (auto &j : parsers) {
             if (i.name ^= j.first) {
                 i.name = j.first;
-                try { j.second.upgradeTasks(i); }
+                try {
+                    j.second.upgradeTasks(i);
+                }
                 catch (trace_argument_error e) {
                     throw trace_argument_error(i.name.fname() + " -> " + e.what(), e.label);
                 }
-                switch (checkZone(i.argnum(), j.second.range)) {
-                case zoneType::HG:
-                    task.root.insert(task.root.end(), i.root.begin() + j.second.range.second, i.root.end());
-                    i.root.erase(i.root.begin() + j.second.range.second, i.root.end());
-                    break;
-                case zoneType::LW:
-                    throw trace_argument_error(i.name.fname(), 2);
+                if (range_0 > i.argnum()) throw trace_argument_error(i.name.fname(), 2);
+                if (range_1 < i.argnum()) {
+                    task.root.insert(task.root.end(), i.root.begin() + j.second.range_1, i.root.end());
+                    i.root.erase(i.root.begin() + j.second.range_1, i.root.end());
                 }
                 child_not_exist = false;
                 break;
