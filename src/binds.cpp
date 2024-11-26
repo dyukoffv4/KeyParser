@@ -1,4 +1,4 @@
-#include "keyparser/binds.hpp"
+#include "include/keyparser/binds.hpp"
 
 keyparser::Binds::Binds(void(*root_bind)(const Args& args)) : root_bind(root_bind) {
     before = nullptr;
