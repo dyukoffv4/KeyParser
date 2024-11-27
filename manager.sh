@@ -2,14 +2,10 @@
 
 COMMAND_1=$1
 COMMAND_2=$2
-CURRENT_PATH=$(dirname $(realpath $0))
 
 function Cmake {
-    mkdir -p build/cmake
-    cd build/cmake
-    cmake $CURRENT_PATH
-    cmake --build .
-    cd $CURRENT_PATH
+    cmake -B build/cmake -S .
+    cmake --build build/cmake
 }
 
 function Build {
@@ -41,7 +37,7 @@ function Clean {
     if [[ $COMMAND_2 == "tests" ]]; then rm -rf tests/build tests/bin; fi
 }
 
-cd $CURRENT_PATH
+cd $(dirname $(realpath $0))
 if [[ $COMMAND_1 == "cmake" ]]; then Cmake; fi
 if [[ $COMMAND_1 == "build" ]]; then Build; fi
 if [[ $COMMAND_1 == "tests" ]]; then Tests; fi
