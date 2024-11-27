@@ -17,8 +17,21 @@ function Build {
 }
 
 function Tests {
-    cd test
-    bash run.sh
+    cd tests
+    if [[ $COMMAND_2 == "all" ]]; then Tests_Cmake; Tests_Run; fi
+    if [[ $COMMAND_2 == "cmake" ]]; then Tests_Cmake; fi
+    if [[ $COMMAND_2 == "run" ]]; then Tests_Run; fi
+    cd ..
+}
+
+function Tests_Cmake {
+    cmake -B build -S .
+    cmake --build build
+}
+
+function Tests_Run {
+    echo -e "\nTEST START\n"
+    for i in $(ls bin); do ./bin/$i; done
 }
 
 function Clean {
