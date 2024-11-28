@@ -24,22 +24,19 @@ keyparser::Parser &keyparser::Parser::operator=(const Parser &parser) {
     return *this;
 }
 
-keyparser::Parser* keyparser::Parser::addKey(const Key& key, unsigned f_num, unsigned s_num, bool force) {
+keyparser::Parser* keyparser::Parser::addKey(const Key& key, unsigned f_num, unsigned s_num) {
     if (f_num > s_num) throw std::invalid_argument("# Parser.addKey: First num can't be bigger then second!");
-    if (force) delKey(key, false);
-    else if (getKey(key, false)) return nullptr;
+    if (getKey(key, false)) return nullptr;
     return &(parsers[key] = Parser(f_num, s_num));
 }
 
-keyparser::Parser* keyparser::Parser::addKey(const Key& key, unsigned num, bool force) {
-    if (force) delKey(key, false);
-    else if (getKey(key, false)) return nullptr;
+keyparser::Parser* keyparser::Parser::addKey(const Key& key, unsigned num) {
+    if (getKey(key, false)) return nullptr;
     return &(parsers[key] = Parser(num));
 }
 
-keyparser::Parser* keyparser::Parser::addKey(const Key& key, bool force) {
-    if (force) delKey(key, false);
-    else if (getKey(key, false)) return nullptr;
+keyparser::Parser* keyparser::Parser::addKey(const Key& key) {
+    if (getKey(key, false)) return nullptr;
     return &(parsers[key] = Parser());
 }
 
@@ -51,20 +48,21 @@ keyparser::Parser* keyparser::Parser::getKey(const Key& key, bool exact) {
     return nullptr;
 }
 
-void keyparser::Parser::delKey(const Key& key, bool exact) {
-    if (exact) {
-        if (parsers.count(key)) parsers.erase(key);
-    }
-    else {
-        for (auto i = parsers.begin(); i != parsers.end();) {
-            if (i->first ^= key) i = parsers.erase(i);
-            else i++;
+unsigned keyparser::Parser::delKey(const Key& key, bool exact) {
+    if (exact) return parsers.erase(key);
+    unsigned erased = 0;
+    for (auto i = parsers.begin(); i != parsers.end();) {
+        if (i->first ^= key) {
+            i = parsers.erase(i);
+            erased++;
         }
+        else i++;
     }
+    return erased;
 }
 
 void keyparser::Parser::setRange(unsigned f_num, unsigned s_num) {
-    if (f_num > s_num && s_num > -1) throw std::invalid_argument("# Parser.setRange: First num can't be bigger then second!");
+    if (f_num > s_num) throw std::invalid_argument("# Parser.setRange: First num can't be bigger then second!");
     range_0 = f_num;
     range_1 = s_num;
 }
@@ -133,27 +131,30 @@ std::pair<int, int> keyparser::Parser::checkArg(const std::string& arg) {
     throw std::invalid_argument("# Parser.checkArg: Invalid key format!\n");
 }
 
-void keyparser::Parser::upgradeTasks(Task& task) {
-    for (auto &i : task.childs) {
+void keyparser::Parser::upgradeTasks(Task& tasks) {
+    for (auto &task : tasks.childs) {
         bool child_not_exist = true;
-        for (auto &j : parsers) {
-            if (i.name ^= j.first) {
-                i.name = j.first;
-                try {
-                    j.second.upgradeTasks(i);
+        for (auto &i : parsers) {
+            Parser& parser = i.second;
+            if (task.name ^= i.first) {
+                if (task.keynum()) {
+                    try {
+                        parser.upgradeTasks(task);
+                    }
+                    catch (trace_argument_error e) {
+                        throw trace_argument_error(task.name.fname() + " -> " + e.what(), e.label);
+                    }
                 }
-                catch (trace_argument_error e) {
-                    throw trace_argument_error(i.name.fname() + " -> " + e.what(), e.label);
+                if (parser.range_0 > task.argnum()) throw trace_argument_error(task.name.fname(), 2);
+                if (parser.range_1 < task.argnum()) {
+                    task.root.insert(task.root.end(), task.root.begin() + parser.range_1, task.root.end());
+                    task.root.erase(task.root.begin() + parser.range_1, task.root.end());
                 }
-                if (range_0 > i.argnum()) throw trace_argument_error(i.name.fname(), 2);
-                if (range_1 < i.argnum()) {
-                    task.root.insert(task.root.end(), i.root.begin() + j.second.range_1, i.root.end());
-                    i.root.erase(i.root.begin() + j.second.range_1, i.root.end());
-                }
+                task.name = i.first;
                 child_not_exist = false;
                 break;
             }
         }
-        if (child_not_exist) throw trace_argument_error(i.name.fname(), 1);
+        if (child_not_exist) throw trace_argument_error(task.name.fname(), 1);
     }
 }

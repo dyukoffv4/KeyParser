@@ -3,6 +3,7 @@
 #include "tasks.hpp"
 
 namespace keyparser {
+    /// @brief Store binds for keys and run callback functions over task tree
     class Binds {
     private:
         void(*before)();
