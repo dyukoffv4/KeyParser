@@ -26,8 +26,11 @@ function Tests_Cmake {
 }
 
 function Tests_Run {
-    echo -e "\nTEST START\n"
-    for i in $(ls bin); do ./bin/$i; done
+    for i in $(ls bin)
+    do
+        echo -e "\n** TEST $i\n"
+        ./bin/$i
+    done
 }
 
 function Clean {
