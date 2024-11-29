@@ -147,7 +147,7 @@ void keyparser::Parser::upgradeTasks(Task& tasks) {
                 }
                 if (parser.range_0 > task.argnum()) throw trace_argument_error(task.name.fname(), 2);
                 if (parser.range_1 < task.argnum()) {
-                    task.root.insert(task.root.end(), task.root.begin() + parser.range_1, task.root.end());
+                    tasks.root.insert(tasks.root.end(), task.root.begin() + parser.range_1, task.root.end());
                     task.root.erase(task.root.begin() + parser.range_1, task.root.end());
                 }
                 task.name = i.first;
