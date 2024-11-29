@@ -3,12 +3,14 @@
 #include "tasks.hpp"
 
 namespace keyparser {
+	/// @brief Thrown to report invalid arguments to function with error index
 	class trace_argument_error : public std::invalid_argument {
 	public:
 		int label;
 		trace_argument_error(std::string msg, int label) : std::invalid_argument(msg), label(label) {}
 	};
 
+	/// @brief Store parsing settings and create task tree from input arguments
 	class Parser {
 	private:
 		std::map<Key, Parser> parsers;
@@ -41,22 +43,19 @@ namespace keyparser {
 		/// @param data Key [Key&]
 		/// @param f_num Lower limit of parameters [unsigned]
 		/// @param s_num Upper limit of parameters [unsigned]
-		/// @param force Delete same keys
 		/// @return Pointer to key parser [Parser*]
-		Parser* addKey(const Key& data, unsigned f_num, unsigned s_num, bool force = false);
+		Parser* addKey(const Key& data, unsigned f_num, unsigned s_num);
 
 		/// @brief Add key with fixed number of parameters
 		/// @param data Key [Key&]
 		/// @param num Number of parameters [unsigned]
-		/// @param force Delete same keys
 		/// @return Pointer to key parser [Parser*]
-		Parser* addKey(const Key& data, unsigned num, bool force = false);
+		Parser* addKey(const Key& data, unsigned num);
 
 		/// @brief Add key with fixed number of parameters
 		/// @param data Key [Key&]
-		/// @param force Delete same keys
 		/// @return Pointer to key parser [Parser*]
-		Parser* addKey(const Key& data, bool force = false);
+		Parser* addKey(const Key& data);
 		
 		/// @brief Get a key from storage
 		/// @param data Key to get [Key&]
@@ -67,7 +66,8 @@ namespace keyparser {
 		/// @brief Delete a key from storage
 		/// @param data Key to delete [Key&]
 		/// @param exact Matching parameter [bool]
-		void delKey(const Key& data, bool exact = true);
+		/// @return The number of elements erased [unsigned]
+		unsigned delKey(const Key& data, bool exact = true);
 
 		/// @brief Set range of numbers for root parameters
 		/// @param f_num Lower limit of parameters [unsigned]

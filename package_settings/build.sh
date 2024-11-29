@@ -1,4 +1,5 @@
 #!/usr/bin/bash
+
 PACKAGE_PATH=build/keyparser
 INCLUDE_PATH=include/keyparser
 LIB_FILEPATH=build/cmake/libkeyparser.so
