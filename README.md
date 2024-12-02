@@ -87,4 +87,5 @@
 
 ---
 ## **4. Пример использования**
-Пример использования **KeyParser** версии 1.0.1: https://github.com/dyukoffv4/KustKust/tree/master/KeyParser-examples/paint
+**KeyParser** версии 1.0.1: https://github.com/dyukoffv4/KustKust/tree/master/KeyParser-examples/paint
+**KeyParser** версии 1.1.0: https://github.com/dyukoffv4/KustKust/tree/master/KeyParser-examples/wallmake
