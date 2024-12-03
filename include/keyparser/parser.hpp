@@ -34,11 +34,6 @@ namespace keyparser {
 		/// @brief Create parser with unlimited number of parameters
 		Parser();
 
-		/// @brief Assing new parser to current
-		/// @param parser Parser [Parser&]
-		/// @return Reference to parser [Parser&]
-		Parser& operator=(const Parser& parser);
-
 		/// @brief Add key with limited number of parameters
 		/// @param data Key [Key&]
 		/// @param f_num Lower limit of parameters [unsigned]
