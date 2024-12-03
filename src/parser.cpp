@@ -16,14 +16,6 @@ keyparser::Parser::Parser() {
     range_1 = uint_max;
 }
 
-keyparser::Parser &keyparser::Parser::operator=(const Parser &parser) {
-    parsers.clear();
-    for (auto &i : parser.parsers) parsers[i.first] = i.second;
-    range_0 = parser.range_0;
-    range_1 = parser.range_1;
-    return *this;
-}
-
 keyparser::Parser* keyparser::Parser::addKey(const Key& key, unsigned f_num, unsigned s_num) {
     if (f_num > s_num) throw std::invalid_argument("# Parser.addKey: First num can't be bigger then second!");
     if (getKey(key, false)) return nullptr;
