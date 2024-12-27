@@ -20,27 +20,35 @@ namespace keyparser {
         /// @brief Add key bind
         /// @param key Key [Key&]
         /// @param new_bind Handler [void(*)(const Args&)]
-        /// @param call_first 
-        void bind(const Key& key, const Binds& new_bind, bool call_first = false);
+        /// @param call_first Handle key berore root key [bool]
+		/// @return Pointer to key bind [Binds*]
+        Binds* bind(const Key& key, void(*new_bind)(const Args& args), bool call_first = false);
 
         /// @brief Add root key bind
         /// @param new_bind Handler [void(*)(const Args&)]
-        void bind(void(*new_bind)(const Args& args));
+		/// @return Pointer to key bind [Binds*]
+        Binds* bind(void(*new_bind)(const Args& args));
 
         /// @brief Delete key bind
         /// @param key Key [Key&]
-        void unbind(const Key& key);
+        /// @param exact Matching parameter [bool]
+		/// @return Pointer to key bind [Binds*]
+        Binds* get_bind(const Key& key, bool exact = true);
+
+        /// @brief Delete key bind
+        /// @param key Key [Key&]
+        /// @param exact Matching parameter [bool]
+		/// @return The number of unbinds [unsigned]
+        unsigned unbind(const Key& key, bool exact = true);
 
         /// @brief Delete root key bind
-        void unbind();
+		/// @return The number of unbinds [unsigned]
+        unsigned unbind();
 
-        /// @brief Set function, running before handling keys
-        /// @param function Function [void(*)()]
-        void before_all(void(*function)());
-
-        /// @brief Set function, running after handling keys
-        /// @param function Function [void(*)()]
-        void after_all(void(*function)());
+        /// @brief Set function, running before or after handling keys
+        /// @param function Handler [void(*)()]
+        /// @param run_after Set handler running after all [bool]
+        void bind_around(void(*function)(), bool run_after = false);
 
         /// @brief Run handling over tasks
         /// @param task Task to handle [Task&]
