@@ -79,13 +79,13 @@
 
 ---
 ## **3. Тестирование**
-Все элементы тестирования находятся в директории "tests". Для управлением тестов используется команда `tests`.
+Все элементы тестирования находятся в директории "tests". Для управления запуском тестов используется команда `tests`.
 
     $ bash manager.sh tests cmake       # Для сборки тестов
     $ bash manager.sh tests run         # Для запуска тестов
     $ bash manager.sh tests all         # Для сборки и запуска тестов
 
 ---
-## **4. Пример использования**
+## **4. Варианты использования**
 **KeyParser** версии 1.0.1: https://github.com/dyukoffv4/KustKust/tree/master/KeyParser-examples/paint
 **KeyParser** версии 1.1.0: https://github.com/dyukoffv4/KustKust/tree/master/KeyParser-examples/wallmake
